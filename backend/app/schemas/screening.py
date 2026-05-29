@@ -1,0 +1,24 @@
+import uuid
+from datetime import datetime
+
+from pydantic import BaseModel, ConfigDict
+
+from app.schemas.theatre import TheatreResponse
+
+
+class MovieResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    title: str
+
+
+class ScreeningResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    theatre: TheatreResponse
+    movie: MovieResponse
+    start_time: datetime
+    end_time: datetime | None
+    created_at: datetime
