@@ -24,6 +24,7 @@ _YEAR_RE = re.compile(r"\(\d{4}\)")
 _SKIP_SUBSTRINGS = (
     "CLOSED FOR PRIVATE RENTAL",
     "48 Hour Film",
+    "FOUND FOOTAGE FEST",
 )
 
 
@@ -90,8 +91,10 @@ def _extract_film_title(raw: str) -> str | None:
     if m:
         film_part = film_part[: m.end()].strip()
     else:
-        # No year: trim at qualifier suffix delimited by " - " or " – "
-        for sep in (" - ", " – ", " — "):
+        # No year: trim at qualifier suffix delimited by " - ", " – ", or
+        # the literal "u2013"/"u2014" that WordPress sometimes emits instead
+        # of a proper JSON \u escape.
+        for sep in (" - ", " – ", " — ", " u2013 ", " u2014 "):
             idx = film_part.find(sep)
             if idx != -1:
                 film_part = film_part[:idx].strip()
