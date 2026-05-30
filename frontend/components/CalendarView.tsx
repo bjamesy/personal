@@ -4,8 +4,9 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
-import type { ScreeningData, TheatreData, TicketConfirmedStatus } from "@/lib/api";
-import { patchOutboundClick, recordOutboundClick } from "@/lib/api";
+import type { RestaurantInterestType, ScreeningData, TheatreData, TicketConfirmedStatus } from "@/lib/api";
+import { patchOutboundClick, recordOutboundClick, recordRestaurantInterest } from "@/lib/api";
+import { RestaurantInterestModal } from "@/components/RestaurantInterestModal";
 import { TicketFollowUpModal } from "@/components/TicketFollowUpModal";
 import {
   buildCalendarWeeks,
@@ -32,7 +33,15 @@ const PENDING_CLICK_KEY = "pending_outbound_click";
 
 interface PendingClick {
   id: string | null; // null while the API call is in-flight
+  theatreId: string;
+  theatreName: string;
   shownAt?: number;
+}
+
+interface RestaurantModalState {
+  clickId: string;
+  theatreId: string;
+  theatreName: string;
 }
 
 function screeningUrl(s: ScreeningData): string {
@@ -55,7 +64,9 @@ export function CalendarView({ theatres, screenings, month }: Props) {
   const [inputValue, setInputValue] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [modalClickId, setModalClickId] = useState<string | null>(null);
+  const [restaurantModal, setRestaurantModal] = useState<RestaurantModalState | null>(null);
   const modalTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pendingTheatreRef = useRef<{ theatreId: string; theatreName: string } | null>(null);
 
   useEffect(() => {
     const id = setTimeout(() => setSearchTerm(inputValue.trim()), 250);
@@ -84,6 +95,8 @@ export function CalendarView({ theatres, screenings, month }: Props) {
           const updated: PendingClick = { ...pending, shownAt: Date.now() };
           localStorage.setItem(PENDING_CLICK_KEY, JSON.stringify(updated));
           setModalClickId(pending.id!);
+          // Stash theatre info in a ref so handleModalAnswer can access it
+          pendingTheatreRef.current = { theatreId: pending.theatreId, theatreName: pending.theatreName };
         }, 5000);
       } catch {
         localStorage.removeItem(PENDING_CLICK_KEY);
@@ -104,14 +117,14 @@ export function CalendarView({ theatres, screenings, month }: Props) {
     // Write a placeholder immediately so visibilitychange fires before the
     // API responds still has something to detect.
     try {
-      const placeholder: PendingClick = { id: null };
+      const placeholder: PendingClick = { id: null, theatreId: s.theatre.id, theatreName: s.theatre.name };
       localStorage.setItem(PENDING_CLICK_KEY, JSON.stringify(placeholder));
     } catch {}
 
     const click = await recordOutboundClick(s.id, s.theatre.id);
     if (click) {
       try {
-        const pending: PendingClick = { id: click.id };
+        const pending: PendingClick = { id: click.id, theatreId: s.theatre.id, theatreName: s.theatre.name };
         localStorage.setItem(PENDING_CLICK_KEY, JSON.stringify(pending));
       } catch {}
     } else {
@@ -121,6 +134,7 @@ export function CalendarView({ theatres, screenings, month }: Props) {
 
   async function handleModalAnswer(answer: TicketConfirmedStatus) {
     const id = modalClickId;
+    const theatre = pendingTheatreRef.current;
     setModalClickId(null);
     localStorage.removeItem(PENDING_CLICK_KEY);
     if (id) {
@@ -128,6 +142,9 @@ export function CalendarView({ theatres, screenings, month }: Props) {
         ticket_confirmed: answer,
         prompted_at: new Date().toISOString(),
       });
+    }
+    if (answer === "yes" && id && theatre) {
+      setRestaurantModal({ clickId: id, theatreId: theatre.theatreId, theatreName: theatre.theatreName });
     }
   }
 
@@ -138,6 +155,18 @@ export function CalendarView({ theatres, screenings, month }: Props) {
     if (id) {
       patchOutboundClick(id, { prompted_at: new Date().toISOString() });
     }
+  }
+
+  async function handleRestaurantAnswer(answer: RestaurantInterestType) {
+    const state = restaurantModal;
+    setRestaurantModal(null);
+    if (state) {
+      await recordRestaurantInterest(state.clickId, state.theatreId, answer);
+    }
+  }
+
+  function handleRestaurantDismiss() {
+    setRestaurantModal(null);
   }
 
   const allSelected = selectedSlugs.size === theatres.length;
@@ -452,6 +481,13 @@ export function CalendarView({ theatres, screenings, month }: Props) {
         <TicketFollowUpModal
           onAnswer={handleModalAnswer}
           onDismiss={handleModalDismiss}
+        />
+      )}
+      {restaurantModal && (
+        <RestaurantInterestModal
+          theatreName={restaurantModal.theatreName}
+          onAnswer={handleRestaurantAnswer}
+          onDismiss={handleRestaurantDismiss}
         />
       )}
     </div>

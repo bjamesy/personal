@@ -4,7 +4,7 @@ from typing import AsyncGenerator
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.routes import outbound_clicks, scraper_runs, screenings, theatres
+from app.api.routes import outbound_clicks, restaurant_interest_events, scraper_runs, screenings, theatres
 from app.logging_config import setup_logging
 
 
@@ -27,6 +27,7 @@ app.include_router(screenings.router)
 app.include_router(theatres.router)
 app.include_router(scraper_runs.router)
 app.include_router(outbound_clicks.router)
+app.include_router(restaurant_interest_events.router)
 
 
 @app.get("/health")

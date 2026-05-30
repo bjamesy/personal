@@ -72,6 +72,24 @@ export async function recordOutboundClick(
   }
 }
 
+export type RestaurantInterestType = "before_movie" | "after_movie" | "browsing" | "declined";
+
+export async function recordRestaurantInterest(
+  outbound_click_id: string,
+  theatre_id: string,
+  interest_type: RestaurantInterestType
+): Promise<void> {
+  try {
+    await fetch(`${PUBLIC_API_URL}/restaurant-interest-events`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ outbound_click_id, theatre_id, interest_type }),
+    });
+  } catch {
+    // best-effort
+  }
+}
+
 export async function patchOutboundClick(
   id: string,
   body: { ticket_confirmed?: TicketConfirmedStatus; prompted_at?: string }
