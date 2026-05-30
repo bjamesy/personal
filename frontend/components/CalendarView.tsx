@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { createPortal } from "react-dom";
 
 import type { ScreeningData, TheatreData } from "@/lib/api";
 import {
@@ -23,6 +24,20 @@ interface Props {
 }
 
 const DAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const VISIBLE_COUNT = 5;
+
+function screeningUrl(s: ScreeningData): string {
+  const ref = s.raw_source_ref;
+  if (!ref) return s.theatre.source_url;
+  if (ref.startsWith("/")) {
+    try {
+      return new URL(ref, new URL(s.theatre.source_url).origin).href;
+    } catch {
+      return s.theatre.source_url;
+    }
+  }
+  return ref;
+}
 
 export function CalendarView({ theatres, screenings, month }: Props) {
   const [selectedSlug, setSelectedSlug] = useState<string>("all");
@@ -117,6 +132,8 @@ export function CalendarView({ theatres, screenings, month }: Props) {
             const inMonth =
               date.getMonth() === m - 1 && date.getFullYear() === year;
             const isToday = key === today;
+            const visible = dayScreenings.slice(0, VISIBLE_COUNT);
+            const hidden = dayScreenings.slice(VISIBLE_COUNT);
 
             return (
               <div
@@ -140,24 +157,25 @@ export function CalendarView({ theatres, screenings, month }: Props) {
 
                 {/* Screenings */}
                 <div className="space-y-0.5">
-                  {dayScreenings.slice(0, 5).map((s) => (
-                    <div
+                  {visible.map((s) => (
+                    <a
                       key={s.id}
-                      className="text-xs leading-snug truncate"
+                      href={screeningUrl(s)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs leading-snug truncate flex gap-1 hover:bg-zinc-50 rounded"
                       title={`${displayTitle(s.movie.title)} — ${s.theatre.name} — ${formatTime(s.start_time)}`}
                     >
-                      <span className="text-zinc-400 tabular-nums">
+                      <span className="text-zinc-400 tabular-nums shrink-0">
                         {formatTime(s.start_time)}
-                      </span>{" "}
-                      <span className="text-zinc-700">
+                      </span>
+                      <span className="text-zinc-700 truncate">
                         {displayTitle(s.movie.title)}
                       </span>
-                    </div>
+                    </a>
                   ))}
-                  {dayScreenings.length > 5 && (
-                    <div className="text-xs text-zinc-400">
-                      +{dayScreenings.length - 5} more
-                    </div>
+                  {hidden.length > 0 && (
+                    <OverflowBadge screenings={hidden} />
                   )}
                 </div>
               </div>
@@ -174,6 +192,94 @@ export function CalendarView({ theatres, screenings, month }: Props) {
     </div>
   );
 }
+
+// ---------------------------------------------------------------------------
+
+interface OverflowBadgeProps {
+  screenings: ScreeningData[];
+}
+
+function OverflowBadge({ screenings }: OverflowBadgeProps) {
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [popoverStyle, setPopoverStyle] = useState<React.CSSProperties | null>(null);
+
+  const cancelHide = () => {
+    if (hideTimerRef.current !== null) {
+      clearTimeout(hideTimerRef.current);
+      hideTimerRef.current = null;
+    }
+  };
+
+  const showPopover = () => {
+    cancelHide();
+    if (!triggerRef.current) return;
+    const rect = triggerRef.current.getBoundingClientRect();
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const estimatedHeight = screenings.length * 20 + 16;
+    const showAbove = spaceBelow < estimatedHeight && rect.top > estimatedHeight;
+    setPopoverStyle(
+      showAbove
+        ? { position: "fixed", bottom: window.innerHeight - rect.top + 4, left: rect.left }
+        : { position: "fixed", top: rect.bottom + 4, left: rect.left }
+    );
+  };
+
+  const scheduleHide = () => {
+    hideTimerRef.current = setTimeout(() => setPopoverStyle(null), 150);
+  };
+
+  return (
+    <>
+      <button
+        ref={triggerRef}
+        onMouseEnter={showPopover}
+        onMouseLeave={scheduleHide}
+        onFocus={showPopover}
+        onBlur={scheduleHide}
+        aria-expanded={popoverStyle !== null}
+        aria-label={`Show ${screenings.length} more screenings`}
+        className="text-xs text-zinc-400 hover:text-zinc-600 cursor-default focus:outline-none focus-visible:underline"
+      >
+        +{screenings.length} more
+      </button>
+
+      {popoverStyle &&
+        createPortal(
+          <div
+            role="list"
+            aria-label="Additional screenings"
+            style={popoverStyle}
+            onMouseEnter={cancelHide}
+            onMouseLeave={scheduleHide}
+            className="z-50 min-w-52 max-w-72 rounded-lg border border-zinc-200 bg-white py-2 shadow-lg"
+          >
+            {screenings.map((s) => (
+              <a
+                key={s.id}
+                role="listitem"
+                href={screeningUrl(s)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-baseline gap-2 px-3 py-0.5 text-xs hover:bg-zinc-50"
+                title={`${displayTitle(s.movie.title)} — ${s.theatre.name}`}
+              >
+                <span className="shrink-0 tabular-nums text-zinc-400">
+                  {formatTime(s.start_time)}
+                </span>
+                <span className="truncate text-zinc-700">
+                  {displayTitle(s.movie.title)}
+                </span>
+              </a>
+            ))}
+          </div>,
+          document.body
+        )}
+    </>
+  );
+}
+
+// ---------------------------------------------------------------------------
 
 function FilterButton({
   label,

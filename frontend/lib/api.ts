@@ -22,6 +22,7 @@ export interface ScreeningData {
   movie: MovieData;
   start_time: string;
   end_time: string | null;
+  raw_source_ref: string | null;
   created_at: string;
 }
 

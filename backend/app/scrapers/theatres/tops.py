@@ -3,6 +3,8 @@ import re
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
+from urllib.parse import urljoin
+
 from bs4 import BeautifulSoup
 
 from app.scrapers.base import RawScreening, TheatreConfig
@@ -65,7 +67,7 @@ class TOPSScraper(JSRenderedScraper):
                 screenings.append(RawScreening(
                     movie_title=title,
                     start_time=start_time,
-                    raw_source_ref=href,
+                    raw_source_ref=urljoin(self.config.source_url, href),
                 ))
             except Exception:
                 logger.exception("tops_parse_error", extra={"block": str(block)[:100]})

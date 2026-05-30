@@ -21,4 +21,5 @@ class ScreeningResponse(BaseModel):
     movie: MovieResponse
     start_time: datetime
     end_time: datetime | None
+    raw_source_ref: str | None
     created_at: datetime
