@@ -13,7 +13,6 @@ TORONTO_TZ = ZoneInfo("America/Toronto")
 _LOOKAHEAD_DAYS = 7
 _LOCATION_ID = 7199
 _API_URL = "https://apis.cineplex.com/prod/cpx/theatrical/api/v1/showtimes"
-_FILM_BASE_URL = "https://www.cineplex.com/en/movie"
 
 # Public key embedded in Cineplex's JS bundle — same for all visitors.
 _HEADERS = {
@@ -60,8 +59,8 @@ def _parse_response(data: list) -> list[RawScreening]:
         for date_block in theatre.get("dates", []):
             for movie in date_block.get("movies", []):
                 title = movie.get("name", "").strip()
-                film_url = movie.get("filmUrl")
-                movie_url = f"{_FILM_BASE_URL}/{film_url}" if film_url else None
+                film_url = movie.get("filmUrl", "")
+                fallback_url = f"https://www.cineplex.com/en/movie/{film_url}" if film_url else None
 
                 for experience in movie.get("experiences", []):
                     for session in experience.get("sessions", []):
@@ -72,10 +71,11 @@ def _parse_response(data: list) -> list[RawScreening]:
                             continue
                         try:
                             start_time = datetime.fromisoformat(start_str).replace(tzinfo=TORONTO_TZ)
+                            deeplink = session.get("deeplinkUrl") or fallback_url
                             screenings.append(RawScreening(
                                 movie_title=title,
                                 start_time=start_time,
-                                raw_source_ref=movie_url,
+                                raw_source_ref=deeplink or fallback_url,
                             ))
                         except ValueError:
                             logger.warning("varsity_bad_datetime", extra={"start": start_str})
