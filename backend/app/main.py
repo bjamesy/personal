@@ -3,7 +3,7 @@ from typing import AsyncGenerator
 
 from fastapi import FastAPI
 
-from app.api.routes import scraper_runs, screenings, theatres
+from app.api.routes import outbound_clicks, scraper_runs, screenings, theatres
 from app.logging_config import setup_logging
 
 
@@ -18,6 +18,7 @@ app = FastAPI(title="Toronto Theatre Screening Aggregator", lifespan=lifespan)
 app.include_router(screenings.router)
 app.include_router(theatres.router)
 app.include_router(scraper_runs.router)
+app.include_router(outbound_clicks.router)
 
 
 @app.get("/health")

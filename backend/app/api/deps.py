@@ -4,9 +4,16 @@ from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_session
+from app.services.outbound_click import OutboundClickService
 from app.services.scraper_run import ScraperRunService
 from app.services.screening import ScreeningService
 from app.services.theatre import TheatreService
+
+
+async def get_outbound_click_service(
+    session: AsyncSession = Depends(get_session),
+) -> AsyncGenerator[OutboundClickService, None]:
+    yield OutboundClickService(session)
 
 
 async def get_screening_service(

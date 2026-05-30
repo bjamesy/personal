@@ -4,7 +4,9 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
-import type { ScreeningData, TheatreData } from "@/lib/api";
+import type { ScreeningData, TheatreData, TicketConfirmedStatus } from "@/lib/api";
+import { patchOutboundClick, recordOutboundClick } from "@/lib/api";
+import { TicketFollowUpModal } from "@/components/TicketFollowUpModal";
 import {
   buildCalendarWeeks,
   displayTitle,
@@ -26,6 +28,12 @@ interface Props {
 
 const DAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const VISIBLE_COUNT = 5;
+const PENDING_CLICK_KEY = "pending_outbound_click";
+
+interface PendingClick {
+  id: string;
+  shownAt?: number;
+}
 
 function screeningUrl(s: ScreeningData): string {
   const ref = s.raw_source_ref;
@@ -46,11 +54,77 @@ export function CalendarView({ theatres, screenings, month }: Props) {
   );
   const [inputValue, setInputValue] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
+  const [modalClickId, setModalClickId] = useState<string | null>(null);
+  const modalTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     const id = setTimeout(() => setSearchTerm(inputValue.trim()), 250);
     return () => clearTimeout(id);
   }, [inputValue]);
+
+  // When the user returns to this tab, check for a pending outbound click and
+  // show the follow-up modal after a 5-second delay (once per click).
+  useEffect(() => {
+    function maybeShowModal() {
+      if (document.visibilityState !== "visible") return;
+      try {
+        const raw = localStorage.getItem(PENDING_CLICK_KEY);
+        if (!raw) return;
+        const pending: PendingClick = JSON.parse(raw);
+        if (pending.shownAt) return; // already shown this session
+
+        modalTimerRef.current = setTimeout(() => {
+          // Mark as shown so we don't re-trigger on another visibility change
+          const updated: PendingClick = { ...pending, shownAt: Date.now() };
+          localStorage.setItem(PENDING_CLICK_KEY, JSON.stringify(updated));
+          setModalClickId(pending.id);
+        }, 5000);
+      } catch {
+        localStorage.removeItem(PENDING_CLICK_KEY);
+      }
+    }
+
+    document.addEventListener("visibilitychange", maybeShowModal);
+    return () => {
+      document.removeEventListener("visibilitychange", maybeShowModal);
+      if (modalTimerRef.current !== null) clearTimeout(modalTimerRef.current);
+    };
+  }, []);
+
+  async function handleScreeningClick(
+    e: React.MouseEvent<HTMLAnchorElement>,
+    s: ScreeningData
+  ) {
+    // Allow the browser to open the link, then record the click asynchronously.
+    const click = await recordOutboundClick(s.id, s.theatre.id);
+    if (click) {
+      const pending: PendingClick = { id: click.id };
+      try {
+        localStorage.setItem(PENDING_CLICK_KEY, JSON.stringify(pending));
+      } catch {}
+    }
+  }
+
+  async function handleModalAnswer(answer: TicketConfirmedStatus) {
+    const id = modalClickId;
+    setModalClickId(null);
+    localStorage.removeItem(PENDING_CLICK_KEY);
+    if (id) {
+      await patchOutboundClick(id, {
+        ticket_confirmed: answer,
+        prompted_at: new Date().toISOString(),
+      });
+    }
+  }
+
+  function handleModalDismiss() {
+    const id = modalClickId;
+    setModalClickId(null);
+    localStorage.removeItem(PENDING_CLICK_KEY);
+    if (id) {
+      patchOutboundClick(id, { prompted_at: new Date().toISOString() });
+    }
+  }
 
   const allSelected = selectedSlugs.size === theatres.length;
 
@@ -253,6 +327,7 @@ export function CalendarView({ theatres, screenings, month }: Props) {
                           href={screeningUrl(s)}
                           target="_blank"
                           rel="noopener noreferrer"
+                          onClick={(e) => handleScreeningClick(e, s)}
                           className="text-xs leading-snug truncate flex gap-1 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded"
                           title={`${displayTitle(s.movie.title)} — ${s.theatre.name} — ${formatTime(s.start_time)}`}
                         >
@@ -267,7 +342,7 @@ export function CalendarView({ theatres, screenings, month }: Props) {
                     </div>
                   ))}
                   {!isExpanded && hidden.length > 0 && (
-                    <OverflowBadge groups={groupByTheatre(hidden)} />
+                    <OverflowBadge groups={groupByTheatre(hidden)} onClickScreening={handleScreeningClick} />
                   )}
                 </div>
               </div>
@@ -336,6 +411,7 @@ export function CalendarView({ theatres, screenings, month }: Props) {
                                 href={screeningUrl(s)}
                                 target="_blank"
                                 rel="noopener noreferrer"
+                                onClick={(e) => handleScreeningClick(e, s)}
                                 className="flex gap-3 items-baseline py-1.5 px-2 -mx-2 rounded active:bg-zinc-100 dark:active:bg-zinc-800"
                               >
                                 <span className="text-xs tabular-nums text-zinc-400 dark:text-zinc-500 shrink-0 w-16">
@@ -357,6 +433,13 @@ export function CalendarView({ theatres, screenings, month }: Props) {
           </div>
         )}
       </main>
+
+      {modalClickId && (
+        <TicketFollowUpModal
+          onAnswer={handleModalAnswer}
+          onDismiss={handleModalDismiss}
+        />
+      )}
     </div>
   );
 }
@@ -381,9 +464,10 @@ function groupByTheatre(screenings: ScreeningData[]): TheatreGroup[] {
 
 interface OverflowBadgeProps {
   groups: TheatreGroup[];
+  onClickScreening: (e: React.MouseEvent<HTMLAnchorElement>, s: ScreeningData) => void;
 }
 
-function OverflowBadge({ groups }: OverflowBadgeProps) {
+function OverflowBadge({ groups, onClickScreening }: OverflowBadgeProps) {
   const totalCount = groups.reduce((sum, g) => sum + g.screenings.length, 0);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -451,6 +535,7 @@ function OverflowBadge({ groups }: OverflowBadgeProps) {
                     href={screeningUrl(s)}
                     target="_blank"
                     rel="noopener noreferrer"
+                    onClick={(e) => onClickScreening(e, s)}
                     className="flex items-baseline gap-2 px-3 py-0.5 text-xs hover:bg-zinc-50 dark:hover:bg-zinc-800"
                     title={`${displayTitle(s.movie.title)} — ${s.theatre.name}`}
                   >
