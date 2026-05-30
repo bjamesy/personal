@@ -6,6 +6,7 @@ class Settings(BaseSettings):
     environment: str = "development"
     scrape_interval_hours: int = 6  # run 4× per day by default
 
+
     model_config = {"env_file": ".env"}
 
 

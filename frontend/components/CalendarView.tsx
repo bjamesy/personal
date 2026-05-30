@@ -31,7 +31,7 @@ const VISIBLE_COUNT = 5;
 const PENDING_CLICK_KEY = "pending_outbound_click";
 
 interface PendingClick {
-  id: string;
+  id: string | null; // null while the API call is in-flight
   shownAt?: number;
 }
 
@@ -73,11 +73,17 @@ export function CalendarView({ theatres, screenings, month }: Props) {
         const pending: PendingClick = JSON.parse(raw);
         if (pending.shownAt) return; // already shown this session
 
+        if (!pending.id) {
+          // API call still in-flight; retry shortly
+          modalTimerRef.current = setTimeout(maybeShowModal, 500);
+          return;
+        }
+
         modalTimerRef.current = setTimeout(() => {
           // Mark as shown so we don't re-trigger on another visibility change
           const updated: PendingClick = { ...pending, shownAt: Date.now() };
           localStorage.setItem(PENDING_CLICK_KEY, JSON.stringify(updated));
-          setModalClickId(pending.id);
+          setModalClickId(pending.id!);
         }, 5000);
       } catch {
         localStorage.removeItem(PENDING_CLICK_KEY);
@@ -95,13 +101,21 @@ export function CalendarView({ theatres, screenings, month }: Props) {
     e: React.MouseEvent<HTMLAnchorElement>,
     s: ScreeningData
   ) {
-    // Allow the browser to open the link, then record the click asynchronously.
+    // Write a placeholder immediately so visibilitychange fires before the
+    // API responds still has something to detect.
+    try {
+      const placeholder: PendingClick = { id: null };
+      localStorage.setItem(PENDING_CLICK_KEY, JSON.stringify(placeholder));
+    } catch {}
+
     const click = await recordOutboundClick(s.id, s.theatre.id);
     if (click) {
-      const pending: PendingClick = { id: click.id };
       try {
+        const pending: PendingClick = { id: click.id };
         localStorage.setItem(PENDING_CLICK_KEY, JSON.stringify(pending));
       } catch {}
+    } else {
+      localStorage.removeItem(PENDING_CLICK_KEY);
     }
   }
 

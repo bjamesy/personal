@@ -2,6 +2,7 @@ from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.routes import outbound_clicks, scraper_runs, screenings, theatres
 from app.logging_config import setup_logging
@@ -14,6 +15,13 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
 
 app = FastAPI(title="Toronto Theatre Screening Aggregator", lifespan=lifespan)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["POST", "PATCH"],
+    allow_headers=["Content-Type"],
+)
 
 app.include_router(screenings.router)
 app.include_router(theatres.router)
