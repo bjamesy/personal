@@ -94,7 +94,7 @@ export function CalendarView({ theatres, screenings, month }: Props) {
   return (
     <div className="min-h-screen bg-zinc-50">
       {/* Header */}
-      <header className="bg-white border-b border-zinc-200 px-4 py-3">
+      <header className="bg-white border-b border-zinc-200 px-4 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
           <h1 className="text-lg font-semibold text-zinc-900 tracking-tight">
             Toronto Theatre Screenings
@@ -122,10 +122,10 @@ export function CalendarView({ theatres, screenings, month }: Props) {
       </header>
 
       {/* Theatre filter */}
-      <div className="bg-white border-b border-zinc-200 px-4 py-2">
+      <div className="bg-white border-b border-zinc-200 px-4 py-2.5">
         <div className="max-w-7xl mx-auto">
           {/* Desktop: pill buttons */}
-          <div className="hidden md:flex flex-wrap gap-2">
+          <div className="hidden md:flex flex-wrap gap-2 py-0.5">
             <FilterButton
               label="All"
               active={selectedSlugs.size === theatres.length}
@@ -153,7 +153,7 @@ export function CalendarView({ theatres, screenings, month }: Props) {
       </div>
 
       {/* Search */}
-      <div className="bg-white border-b border-zinc-200 px-4 py-2">
+      <div className="bg-white border-b border-zinc-200 px-4 py-2.5">
         <div className="max-w-7xl mx-auto">
           <input
             type="search"
@@ -172,7 +172,7 @@ export function CalendarView({ theatres, screenings, month }: Props) {
           {DAY_LABELS.map((d) => (
             <div
               key={d}
-              className="py-1 text-center text-xs font-medium text-zinc-500 uppercase tracking-wider"
+              className="py-1.5 text-center text-[11px] font-medium text-zinc-400 uppercase tracking-wider"
             >
               {d}
             </div>
@@ -180,7 +180,7 @@ export function CalendarView({ theatres, screenings, month }: Props) {
         </div>
 
         {/* Grid */}
-        <div className="grid grid-cols-7 gap-px bg-zinc-200 rounded-lg overflow-hidden border border-zinc-200">
+        <div className="grid grid-cols-7 gap-px bg-zinc-100 rounded-xl overflow-hidden border border-zinc-100">
           {weeks.flat().map((date, i) => {
             const key = toDateKey(date);
             const dayScreenings = byDate[key] ?? [];
@@ -194,7 +194,7 @@ export function CalendarView({ theatres, screenings, month }: Props) {
             return (
               <div
                 key={i}
-                className={`min-h-24 p-1.5 ${inMonth ? "bg-white" : "bg-zinc-50"} ${isExpanded ? "ring-1 ring-inset ring-zinc-900" : ""}`}
+                className={`min-h-28 p-2 ${inMonth ? "bg-white" : "bg-zinc-50"} ${isExpanded ? "ring-2 ring-inset ring-zinc-900/15" : ""}`}
               >
                 {/* Date row — button when day has screenings */}
                 {dayScreenings.length > 0 ? (
@@ -231,8 +231,8 @@ export function CalendarView({ theatres, screenings, month }: Props) {
                 {/* Screenings */}
                 <div className="space-y-0.5">
                   {(isExpanded ? groupByTheatre(dayScreenings) : groupByTheatre(visible)).map((group) => (
-                    <div key={group.name} className="border-t border-zinc-100 pt-0.5 mt-0.5 first:border-t-0 first:pt-0 first:mt-0">
-                      <div className="text-[10px] uppercase tracking-wider text-zinc-400 font-medium">
+                    <div key={group.name} className="border-t border-zinc-50 pt-0.5 mt-0.5 first:border-t-0 first:pt-0 first:mt-0">
+                      <div className="text-[9px] font-semibold uppercase tracking-widest text-zinc-400/80">
                         {group.name}
                       </div>
                       {group.screenings.map((s) => (
@@ -241,13 +241,13 @@ export function CalendarView({ theatres, screenings, month }: Props) {
                           href={screeningUrl(s)}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-xs leading-snug truncate flex gap-1 hover:bg-zinc-50 rounded"
+                          className="text-xs leading-snug truncate flex gap-1 hover:bg-zinc-100 rounded"
                           title={`${displayTitle(s.movie.title)} — ${s.theatre.name} — ${formatTime(s.start_time)}`}
                         >
                           <span className="text-zinc-400 tabular-nums shrink-0">
                             {formatTime(s.start_time)}
                           </span>
-                          <span className="text-zinc-700 truncate">
+                          <span className="text-zinc-800 truncate">
                             {displayTitle(s.movie.title)}
                           </span>
                         </a>
@@ -277,7 +277,7 @@ export function CalendarView({ theatres, screenings, month }: Props) {
             No screenings found for this month.
           </p>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-3">
             {agendaDates.map((key) => {
               const isExpanded = expandedDay === key;
               const count = byDate[key].length;
@@ -308,7 +308,7 @@ export function CalendarView({ theatres, screenings, month }: Props) {
                     <div className="space-y-3 pt-3">
                       {groupByTheatre(byDate[key]).map((group) => (
                         <div key={group.name}>
-                          <div className="text-[10px] uppercase tracking-wider text-zinc-400 font-medium mb-1">
+                          <div className="text-[9px] font-semibold uppercase tracking-widest text-zinc-400/80 mb-1">
                             {group.name}
                           </div>
                           <div className="space-y-0.5">
@@ -318,7 +318,7 @@ export function CalendarView({ theatres, screenings, month }: Props) {
                                 href={screeningUrl(s)}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="flex gap-3 items-baseline py-1 px-2 -mx-2 rounded active:bg-zinc-100"
+                                className="flex gap-3 items-baseline py-1.5 px-2 -mx-2 rounded active:bg-zinc-100"
                               >
                                 <span className="text-xs tabular-nums text-zinc-400 shrink-0 w-16">
                                   {formatTime(s.start_time)}
@@ -406,7 +406,7 @@ function OverflowBadge({ groups }: OverflowBadgeProps) {
         onBlur={scheduleHide}
         aria-expanded={popoverStyle !== null}
         aria-label={`Show ${totalCount} more screenings`}
-        className="text-xs text-zinc-400 hover:text-zinc-600 cursor-default focus:outline-none focus-visible:underline"
+        className="text-xs text-zinc-400 hover:text-zinc-700 hover:underline cursor-pointer focus:outline-none focus-visible:underline"
       >
         +{totalCount} more
       </button>
