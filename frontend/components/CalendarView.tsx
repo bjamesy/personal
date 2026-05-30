@@ -74,6 +74,12 @@ export function CalendarView({ theatres, screenings, month }: Props) {
     byDate[key].sort((a, b) => a.start_time.localeCompare(b.start_time));
   }
 
+  const [expandedDay, setExpandedDay] = useState<string | null>(null);
+
+  function toggleExpanded(key: string) {
+    setExpandedDay((prev) => (prev === key ? null : key));
+  }
+
   const weeks = buildCalendarWeeks(month);
   const [year, m] = month.split("-").map(Number);
   const today = todayKey();
@@ -167,30 +173,50 @@ export function CalendarView({ theatres, screenings, month }: Props) {
             const inMonth =
               date.getMonth() === m - 1 && date.getFullYear() === year;
             const isToday = key === today;
+            const isExpanded = expandedDay === key;
             const visible = dayScreenings.slice(0, VISIBLE_COUNT);
             const hidden = dayScreenings.slice(VISIBLE_COUNT);
 
             return (
               <div
                 key={i}
-                className={`min-h-24 p-1.5 ${inMonth ? "bg-white" : "bg-zinc-50"}`}
+                className={`min-h-24 p-1.5 ${inMonth ? "bg-white" : "bg-zinc-50"} ${isExpanded ? "ring-1 ring-inset ring-zinc-900" : ""}`}
               >
-                {isToday ? (
+                {/* Date row — button when day has screenings */}
+                {dayScreenings.length > 0 ? (
+                  <button
+                    onClick={() => toggleExpanded(key)}
+                    aria-expanded={isExpanded}
+                    className="w-full flex justify-end items-center gap-0.5 mb-1 cursor-pointer"
+                  >
+                    {isToday ? (
+                      <span className="w-6 h-6 bg-zinc-900 text-white rounded-full flex items-center justify-center text-xs font-semibold">
+                        {date.getDate()}
+                      </span>
+                    ) : (
+                      <span className={`text-xs font-medium ${inMonth ? "text-zinc-600" : "text-zinc-300"}`}>
+                        {date.getDate()}
+                      </span>
+                    )}
+                    <span className={`text-[10px] text-zinc-400 leading-none transition-transform duration-150 ${isExpanded ? "rotate-90" : ""}`}>
+                      ›
+                    </span>
+                  </button>
+                ) : isToday ? (
                   <div className="flex justify-end mb-1">
                     <span className="w-6 h-6 bg-zinc-900 text-white rounded-full flex items-center justify-center text-xs font-semibold">
                       {date.getDate()}
                     </span>
                   </div>
                 ) : (
-                  <div
-                    className={`text-right text-xs font-medium mb-1 ${inMonth ? "text-zinc-600" : "text-zinc-300"}`}
-                  >
+                  <div className={`text-right text-xs font-medium mb-1 ${inMonth ? "text-zinc-600" : "text-zinc-300"}`}>
                     {date.getDate()}
                   </div>
                 )}
 
+                {/* Screenings */}
                 <div className="space-y-0.5">
-                  {groupByTheatre(visible).map((group) => (
+                  {(isExpanded ? groupByTheatre(dayScreenings) : groupByTheatre(visible)).map((group) => (
                     <div key={group.name} className="border-t border-zinc-100 pt-0.5 mt-0.5 first:border-t-0 first:pt-0 first:mt-0">
                       <div className="text-[10px] uppercase tracking-wider text-zinc-400 font-medium">
                         {group.name}
@@ -214,7 +240,7 @@ export function CalendarView({ theatres, screenings, month }: Props) {
                       ))}
                     </div>
                   ))}
-                  {hidden.length > 0 && (
+                  {!isExpanded && hidden.length > 0 && (
                     <OverflowBadge groups={groupByTheatre(hidden)} />
                   )}
                 </div>
@@ -237,47 +263,65 @@ export function CalendarView({ theatres, screenings, month }: Props) {
             No screenings found for this month.
           </p>
         ) : (
-          <div className="space-y-6">
-            {agendaDates.map((key) => (
-              <section key={key}>
-                <h2
-                  className={`text-sm font-semibold mb-2 pb-1 border-b ${
-                    key === today
-                      ? "text-zinc-900 border-zinc-900"
-                      : "text-zinc-500 border-zinc-200"
-                  }`}
-                >
-                  {formatAgendaDate(key, today)}
-                </h2>
-                <div className="space-y-3">
-                  {groupByTheatre(byDate[key]).map((group) => (
-                    <div key={group.name}>
-                      <div className="text-[10px] uppercase tracking-wider text-zinc-400 font-medium mb-1">
-                        {group.name}
-                      </div>
-                      <div className="space-y-0.5">
-                        {group.screenings.map((s) => (
-                          <a
-                            key={s.id}
-                            href={screeningUrl(s)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex gap-3 items-baseline py-1 px-2 -mx-2 rounded active:bg-zinc-100"
-                          >
-                            <span className="text-xs tabular-nums text-zinc-400 shrink-0 w-16">
-                              {formatTime(s.start_time)}
-                            </span>
-                            <span className="text-sm text-zinc-800">
-                              {displayTitle(s.movie.title)}
-                            </span>
-                          </a>
-                        ))}
-                      </div>
+          <div className="space-y-2">
+            {agendaDates.map((key) => {
+              const isExpanded = expandedDay === key;
+              const count = byDate[key].length;
+              return (
+                <section key={key}>
+                  <button
+                    onClick={() => toggleExpanded(key)}
+                    aria-expanded={isExpanded}
+                    className={`w-full flex items-center justify-between py-1.5 mb-0 pb-1.5 border-b text-left ${
+                      key === today ? "border-zinc-900" : "border-zinc-200"
+                    }`}
+                  >
+                    <span className={`text-sm font-semibold ${key === today ? "text-zinc-900" : "text-zinc-500"}`}>
+                      {formatAgendaDate(key, today)}
+                    </span>
+                    <span className="flex items-center gap-1.5 shrink-0">
+                      {!isExpanded && (
+                        <span className="text-xs text-zinc-400">
+                          {count} screening{count !== 1 ? "s" : ""}
+                        </span>
+                      )}
+                      <span className={`text-zinc-400 text-sm leading-none transition-transform duration-150 ${isExpanded ? "rotate-90" : ""}`}>
+                        ›
+                      </span>
+                    </span>
+                  </button>
+                  {isExpanded && (
+                    <div className="space-y-3 pt-3">
+                      {groupByTheatre(byDate[key]).map((group) => (
+                        <div key={group.name}>
+                          <div className="text-[10px] uppercase tracking-wider text-zinc-400 font-medium mb-1">
+                            {group.name}
+                          </div>
+                          <div className="space-y-0.5">
+                            {group.screenings.map((s) => (
+                              <a
+                                key={s.id}
+                                href={screeningUrl(s)}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex gap-3 items-baseline py-1 px-2 -mx-2 rounded active:bg-zinc-100"
+                              >
+                                <span className="text-xs tabular-nums text-zinc-400 shrink-0 w-16">
+                                  {formatTime(s.start_time)}
+                                </span>
+                                <span className="text-sm text-zinc-800">
+                                  {displayTitle(s.movie.title)}
+                                </span>
+                              </a>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              </section>
-            ))}
+                  )}
+                </section>
+              );
+            })}
           </div>
         )}
       </main>
