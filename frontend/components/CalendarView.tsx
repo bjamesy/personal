@@ -40,12 +40,22 @@ function screeningUrl(s: ScreeningData): string {
 }
 
 export function CalendarView({ theatres, screenings, month }: Props) {
-  const [selectedSlug, setSelectedSlug] = useState<string>("all");
+  const [selectedSlugs, setSelectedSlugs] = useState<Set<string>>(
+    () => new Set(theatres.map((t) => t.slug))
+  );
+
+  function toggleSlug(slug: string) {
+    setSelectedSlugs((prev) => {
+      const next = new Set(prev);
+      next.has(slug) ? next.delete(slug) : next.add(slug);
+      return next;
+    });
+  }
 
   const filtered =
-    selectedSlug === "all"
+    selectedSlugs.size === theatres.length
       ? screenings
-      : screenings.filter((s) => s.theatre.slug === selectedSlug);
+      : screenings.filter((s) => selectedSlugs.has(s.theatre.slug));
 
   const byDate = filtered.reduce<Record<string, ScreeningData[]>>((acc, s) => {
     const key = screeningDateKey(s.start_time);
@@ -96,15 +106,15 @@ export function CalendarView({ theatres, screenings, month }: Props) {
         <div className="max-w-7xl mx-auto flex flex-wrap gap-2">
           <FilterButton
             label="All"
-            active={selectedSlug === "all"}
-            onClick={() => setSelectedSlug("all")}
+            active={selectedSlugs.size === theatres.length}
+            onClick={() => setSelectedSlugs(new Set(theatres.map((t) => t.slug)))}
           />
           {theatres.map((t) => (
             <FilterButton
               key={t.slug}
               label={t.name}
-              active={selectedSlug === t.slug}
-              onClick={() => setSelectedSlug(t.slug)}
+              active={selectedSlugs.has(t.slug)}
+              onClick={() => toggleSlug(t.slug)}
             />
           ))}
         </div>
@@ -157,25 +167,32 @@ export function CalendarView({ theatres, screenings, month }: Props) {
 
                 {/* Screenings */}
                 <div className="space-y-0.5">
-                  {visible.map((s) => (
-                    <a
-                      key={s.id}
-                      href={screeningUrl(s)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-xs leading-snug truncate flex gap-1 hover:bg-zinc-50 rounded"
-                      title={`${displayTitle(s.movie.title)} — ${s.theatre.name} — ${formatTime(s.start_time)}`}
-                    >
-                      <span className="text-zinc-400 tabular-nums shrink-0">
-                        {formatTime(s.start_time)}
-                      </span>
-                      <span className="text-zinc-700 truncate">
-                        {displayTitle(s.movie.title)}
-                      </span>
-                    </a>
+                  {groupByTheatre(visible).map((group) => (
+                    <div key={group.name} className="border-t border-zinc-100 pt-0.5 mt-0.5 first:border-t-0 first:pt-0 first:mt-0">
+                      <div className="text-[10px] uppercase tracking-wider text-zinc-400 font-medium">
+                        {group.name}
+                      </div>
+                      {group.screenings.map((s) => (
+                        <a
+                          key={s.id}
+                          href={screeningUrl(s)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs leading-snug truncate flex gap-1 hover:bg-zinc-50 rounded"
+                          title={`${displayTitle(s.movie.title)} — ${s.theatre.name} — ${formatTime(s.start_time)}`}
+                        >
+                          <span className="text-zinc-400 tabular-nums shrink-0">
+                            {formatTime(s.start_time)}
+                          </span>
+                          <span className="text-zinc-700 truncate">
+                            {displayTitle(s.movie.title)}
+                          </span>
+                        </a>
+                      ))}
+                    </div>
                   ))}
                   {hidden.length > 0 && (
-                    <OverflowBadge screenings={hidden} />
+                    <OverflowBadge groups={groupByTheatre(hidden)} />
                   )}
                 </div>
               </div>
@@ -195,11 +212,28 @@ export function CalendarView({ theatres, screenings, month }: Props) {
 
 // ---------------------------------------------------------------------------
 
-interface OverflowBadgeProps {
+interface TheatreGroup {
+  name: string;
   screenings: ScreeningData[];
 }
 
-function OverflowBadge({ screenings }: OverflowBadgeProps) {
+function groupByTheatre(screenings: ScreeningData[]): TheatreGroup[] {
+  const map = new Map<string, TheatreGroup>();
+  for (const s of screenings) {
+    if (!map.has(s.theatre.slug)) map.set(s.theatre.slug, { name: s.theatre.name, screenings: [] });
+    map.get(s.theatre.slug)!.screenings.push(s);
+  }
+  return [...map.values()].sort((a, b) => a.name.localeCompare(b.name));
+}
+
+// ---------------------------------------------------------------------------
+
+interface OverflowBadgeProps {
+  groups: TheatreGroup[];
+}
+
+function OverflowBadge({ groups }: OverflowBadgeProps) {
+  const totalCount = groups.reduce((sum, g) => sum + g.screenings.length, 0);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [popoverStyle, setPopoverStyle] = useState<React.CSSProperties | null>(null);
@@ -215,13 +249,13 @@ function OverflowBadge({ screenings }: OverflowBadgeProps) {
     cancelHide();
     if (!triggerRef.current) return;
     const rect = triggerRef.current.getBoundingClientRect();
-    const spaceBelow = window.innerHeight - rect.bottom;
-    const estimatedHeight = screenings.length * 20 + 16;
-    const showAbove = spaceBelow < estimatedHeight && rect.top > estimatedHeight;
+    const spaceBelow = window.innerHeight - rect.bottom - 8;
+    const spaceAbove = rect.top - 8;
+    const showAbove = spaceAbove > spaceBelow;
     setPopoverStyle(
       showAbove
-        ? { position: "fixed", bottom: window.innerHeight - rect.top + 4, left: rect.left }
-        : { position: "fixed", top: rect.bottom + 4, left: rect.left }
+        ? { position: "fixed", bottom: window.innerHeight - rect.top + 4, left: rect.left, maxHeight: spaceAbove, overflowY: "auto" }
+        : { position: "fixed", top: rect.bottom + 4, left: rect.left, maxHeight: spaceBelow, overflowY: "auto" }
     );
   };
 
@@ -238,10 +272,10 @@ function OverflowBadge({ screenings }: OverflowBadgeProps) {
         onFocus={showPopover}
         onBlur={scheduleHide}
         aria-expanded={popoverStyle !== null}
-        aria-label={`Show ${screenings.length} more screenings`}
+        aria-label={`Show ${totalCount} more screenings`}
         className="text-xs text-zinc-400 hover:text-zinc-600 cursor-default focus:outline-none focus-visible:underline"
       >
-        +{screenings.length} more
+        +{totalCount} more
       </button>
 
       {popoverStyle &&
@@ -254,23 +288,30 @@ function OverflowBadge({ screenings }: OverflowBadgeProps) {
             onMouseLeave={scheduleHide}
             className="z-50 min-w-52 max-w-72 rounded-lg border border-zinc-200 bg-white py-2 shadow-lg"
           >
-            {screenings.map((s) => (
-              <a
-                key={s.id}
-                role="listitem"
-                href={screeningUrl(s)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-baseline gap-2 px-3 py-0.5 text-xs hover:bg-zinc-50"
-                title={`${displayTitle(s.movie.title)} — ${s.theatre.name}`}
-              >
-                <span className="shrink-0 tabular-nums text-zinc-400">
-                  {formatTime(s.start_time)}
-                </span>
-                <span className="truncate text-zinc-700">
-                  {displayTitle(s.movie.title)}
-                </span>
-              </a>
+            {groups.map((group) => (
+              <div key={group.name} className="border-t border-zinc-100 first:border-t-0">
+                <div className="px-3 pt-1 pb-0.5 text-[10px] uppercase tracking-wider text-zinc-400 font-medium">
+                  {group.name}
+                </div>
+                {group.screenings.map((s) => (
+                  <a
+                    key={s.id}
+                    role="listitem"
+                    href={screeningUrl(s)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-baseline gap-2 px-3 py-0.5 text-xs hover:bg-zinc-50"
+                    title={`${displayTitle(s.movie.title)} — ${s.theatre.name}`}
+                  >
+                    <span className="shrink-0 tabular-nums text-zinc-400">
+                      {formatTime(s.start_time)}
+                    </span>
+                    <span className="truncate text-zinc-700">
+                      {displayTitle(s.movie.title)}
+                    </span>
+                  </a>
+                ))}
+              </div>
             ))}
           </div>,
           document.body
