@@ -52,11 +52,13 @@ export function CalendarView({ theatres, screenings, month }: Props) {
     return () => clearTimeout(id);
   }, [inputValue]);
 
+  const selectAll = () => setSelectedSlugs(new Set(theatres.map((t) => t.slug)));
+
   function toggleSlug(slug: string) {
     setSelectedSlugs((prev) => {
       const next = new Set(prev);
       next.has(slug) ? next.delete(slug) : next.add(slug);
-      return next;
+      return next.size === 0 ? new Set(theatres.map((t) => t.slug)) : next;
     });
   }
 
@@ -121,20 +123,32 @@ export function CalendarView({ theatres, screenings, month }: Props) {
 
       {/* Theatre filter */}
       <div className="bg-white border-b border-zinc-200 px-4 py-2">
-        <div className="max-w-7xl mx-auto flex flex-wrap gap-2">
-          <FilterButton
-            label="All"
-            active={selectedSlugs.size === theatres.length}
-            onClick={() => setSelectedSlugs(new Set(theatres.map((t) => t.slug)))}
-          />
-          {theatres.map((t) => (
+        <div className="max-w-7xl mx-auto">
+          {/* Desktop: pill buttons */}
+          <div className="hidden md:flex flex-wrap gap-2">
             <FilterButton
-              key={t.slug}
-              label={t.name}
-              active={selectedSlugs.has(t.slug)}
-              onClick={() => toggleSlug(t.slug)}
+              label="All"
+              active={selectedSlugs.size === theatres.length}
+              onClick={selectAll}
             />
-          ))}
+            {theatres.map((t) => (
+              <FilterButton
+                key={t.slug}
+                label={t.name}
+                active={selectedSlugs.has(t.slug)}
+                onClick={() => toggleSlug(t.slug)}
+              />
+            ))}
+          </div>
+          {/* Mobile: dropdown */}
+          <div className="md:hidden">
+            <TheatreDropdown
+              theatres={theatres}
+              selectedSlugs={selectedSlugs}
+              onToggle={toggleSlug}
+              onSelectAll={selectAll}
+            />
+          </div>
         </div>
       </div>
 
@@ -436,6 +450,117 @@ function OverflowBadge({ groups }: OverflowBadgeProps) {
           document.body
         )}
     </>
+  );
+}
+
+// ---------------------------------------------------------------------------
+
+interface TheatreDropdownProps {
+  theatres: TheatreData[];
+  selectedSlugs: Set<string>;
+  onToggle: (slug: string) => void;
+  onSelectAll: () => void;
+}
+
+function TheatreDropdown({ theatres, selectedSlugs, onToggle, onSelectAll }: TheatreDropdownProps) {
+  const [open, setOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    function onOutside(e: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", onOutside);
+    return () => document.removeEventListener("mousedown", onOutside);
+  }, [open]);
+
+  const allSelected = selectedSlugs.size === theatres.length;
+
+  let label: string;
+  if (allSelected) {
+    label = "All Theatres";
+  } else if (selectedSlugs.size === 1) {
+    const slug = [...selectedSlugs][0];
+    label = theatres.find((t) => t.slug === slug)?.name ?? "1 Theatre";
+  } else {
+    label = `${selectedSlugs.size} of ${theatres.length} Theatres`;
+  }
+
+  return (
+    <div ref={containerRef} className="relative w-full">
+      <button
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        aria-haspopup="listbox"
+        className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+          !allSelected
+            ? "bg-zinc-900 text-white"
+            : "bg-zinc-100 text-zinc-600"
+        }`}
+      >
+        {label}
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 12 12"
+          fill="currentColor"
+          className={`w-3 h-3 shrink-0 transition-transform duration-150 ${open ? "rotate-180" : ""}`}
+          aria-hidden="true"
+        >
+          <path d="M6 8.5 1 3.5h10L6 8.5Z" />
+        </svg>
+      </button>
+
+      {open && (
+        <div
+          role="listbox"
+          aria-multiselectable="true"
+          aria-label="Select theatres"
+          className="absolute top-full left-0 right-0 mt-1.5 z-50 rounded-xl border border-zinc-200 bg-white shadow-lg overflow-hidden"
+        >
+          {/* All option */}
+          <label className="flex items-center gap-3 px-4 py-3 border-b border-zinc-100 cursor-pointer active:bg-zinc-50">
+            <input
+              type="checkbox"
+              checked={allSelected}
+              onChange={onSelectAll}
+              className="w-4 h-4 accent-zinc-900"
+            />
+            <span className="text-sm font-medium text-zinc-900">All Theatres</span>
+          </label>
+
+          {/* Individual theatres */}
+          <div className="max-h-64 overflow-y-auto">
+            {theatres.map((t) => (
+              <label
+                key={t.slug}
+                className="flex items-center gap-3 px-4 py-3 border-b border-zinc-50 last:border-b-0 cursor-pointer active:bg-zinc-50"
+              >
+                <input
+                  type="checkbox"
+                  checked={selectedSlugs.has(t.slug)}
+                  onChange={() => onToggle(t.slug)}
+                  className="w-4 h-4 accent-zinc-900 shrink-0"
+                />
+                <span className="text-sm text-zinc-700">{t.name}</span>
+              </label>
+            ))}
+          </div>
+
+          {/* Done */}
+          <div className="px-4 py-3 border-t border-zinc-100">
+            <button
+              onClick={() => setOpen(false)}
+              className="w-full py-2 text-sm font-medium bg-zinc-900 text-white rounded-lg"
+            >
+              Done
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 
