@@ -143,6 +143,7 @@ export function CalendarView({ theatres, screenings, month }: Props) {
                 key={t.slug}
                 label={t.name}
                 active={selectedSlugs.has(t.slug)}
+                disabled={!t.is_cron_enabled}
                 onClick={() => toggleSlug(t.slug)}
               />
             ))}
@@ -551,15 +552,26 @@ function TheatreDropdown({ theatres, selectedSlugs, onToggle, onSelectAll }: The
             {theatres.map((t) => (
               <label
                 key={t.slug}
-                className="flex items-center gap-3 px-4 py-3 border-b border-zinc-50 dark:border-zinc-800 last:border-b-0 cursor-pointer active:bg-zinc-50 dark:active:bg-zinc-800"
+                className={`flex items-center gap-3 px-4 py-3 border-b border-zinc-50 dark:border-zinc-800 last:border-b-0 ${
+                  t.is_cron_enabled
+                    ? "cursor-pointer active:bg-zinc-50 dark:active:bg-zinc-800"
+                    : "cursor-not-allowed opacity-60"
+                }`}
+                title={!t.is_cron_enabled ? "Scraper temporarily unavailable" : undefined}
               >
                 <input
                   type="checkbox"
                   checked={selectedSlugs.has(t.slug)}
-                  onChange={() => onToggle(t.slug)}
+                  onChange={() => t.is_cron_enabled && onToggle(t.slug)}
+                  disabled={!t.is_cron_enabled}
                   className="w-4 h-4 accent-zinc-900 dark:accent-zinc-400 shrink-0"
                 />
-                <span className="text-sm text-zinc-700 dark:text-zinc-300">{t.name}</span>
+                <span className="flex items-center gap-1.5 text-sm text-zinc-700 dark:text-zinc-300">
+                  {!t.is_cron_enabled && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />
+                  )}
+                  {t.name}
+                </span>
               </label>
             ))}
           </div>
@@ -583,12 +595,25 @@ function TheatreDropdown({ theatres, selectedSlugs, onToggle, onSelectAll }: The
 function FilterButton({
   label,
   active,
+  disabled = false,
   onClick,
 }: {
   label: string;
   active: boolean;
+  disabled?: boolean;
   onClick: () => void;
 }) {
+  if (disabled) {
+    return (
+      <span
+        title="Scraper temporarily unavailable"
+        className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-zinc-100 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-600 cursor-not-allowed"
+      >
+        <span className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />
+        {label}
+      </span>
+    );
+  }
   return (
     <button
       onClick={onClick}

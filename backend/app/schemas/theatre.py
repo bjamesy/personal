@@ -10,3 +10,4 @@ class TheatreResponse(BaseModel):
     name: str
     slug: str
     source_url: str
+    is_cron_enabled: bool

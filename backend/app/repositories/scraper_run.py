@@ -24,6 +24,7 @@ class ScraperRunRepository:
         ended_at: datetime,
         status: ScraperRunStatus,
         items_extracted: int | None = None,
+        screenings_found: int | None = None,
         error_message: str | None = None,
     ) -> ScraperRun:
         result = await self.session.execute(
@@ -33,9 +34,19 @@ class ScraperRunRepository:
         scraper_run.ended_at = ended_at
         scraper_run.status = status
         scraper_run.items_extracted = items_extracted
+        scraper_run.screenings_found = screenings_found
         scraper_run.error_message = error_message
         await self.session.flush()
         return scraper_run
+
+    async def get_last_n_by_theatre(self, theatre_id: uuid.UUID, n: int) -> list[ScraperRun]:
+        result = await self.session.execute(
+            select(ScraperRun)
+            .where(ScraperRun.theatre_id == theatre_id)
+            .order_by(ScraperRun.started_at.desc())
+            .limit(n)
+        )
+        return list(result.scalars().all())
 
     async def get_latest_per_theatre(self) -> list[ScraperRun]:
         # DISTINCT ON (theatre_id) with ORDER BY started_at DESC gives latest run per theatre

@@ -18,11 +18,16 @@ from app.database import async_session_factory
 from app.ingestion.seed import seed_theatres
 from app.ingestion.service import ingest_all
 from app.logging_config import setup_logging
+from app.models.scraper_run import ScraperRunStatus
+from app.repositories.scraper_run import ScraperRunRepository
 from app.repositories.theatre import TheatreRepository
+from app.scrapers.base import ScraperResult
 from app.scrapers.runner import run_all_scrapers
 from app.scrapers.theatres import get_all_scrapers
 
 logger = logging.getLogger(__name__)
+
+_CONSECUTIVE_FAILURE_THRESHOLD = 3
 
 
 async def run_pipeline() -> None:
@@ -37,7 +42,43 @@ async def run_pipeline() -> None:
     results = await run_all_scrapers(scrapers)
     async with async_session_factory() as session:
         await ingest_all(results, session)
+        await _auto_disable_failing_scrapers(results, session)
     logger.info("pipeline_complete", extra={"theatres": len(results)})
+
+
+async def _auto_disable_failing_scrapers(
+    results: list[ScraperResult], session
+) -> None:
+    theatre_repo = TheatreRepository(session)
+    run_repo = ScraperRunRepository(session)
+
+    for result in results:
+        theatre = await theatre_repo.get_by_slug(result.theatre_slug)
+        if not theatre or not theatre.is_cron_enabled:
+            continue
+
+        recent = await run_repo.get_last_n_by_theatre(
+            theatre.id, _CONSECUTIVE_FAILURE_THRESHOLD
+        )
+        if len(recent) < _CONSECUTIVE_FAILURE_THRESHOLD:
+            continue
+
+        def _is_failed(run) -> bool:
+            return (
+                run.status == ScraperRunStatus.failure
+                or (run.screenings_found is not None and run.screenings_found == 0)
+            )
+
+        if all(_is_failed(r) for r in recent):
+            await theatre_repo.disable(result.theatre_slug)
+            await session.commit()
+            logger.warning(
+                "scraper_auto_disabled",
+                extra={
+                    "slug": result.theatre_slug,
+                    "consecutive_failures": _CONSECUTIVE_FAILURE_THRESHOLD,
+                },
+            )
 
 
 async def main() -> None:

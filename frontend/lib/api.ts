@@ -9,6 +9,7 @@ export interface TheatreData {
   name: string;
   slug: string;
   source_url: string;
+  is_cron_enabled: boolean;
 }
 
 export interface MovieData {

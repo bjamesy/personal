@@ -42,6 +42,7 @@ class IngestionService:
                 scraper_run_id=scraper_run.id,
                 ended_at=result.ended_at,
                 status=ScraperRunStatus.failure,
+                screenings_found=0,
                 error_message=result.error,
             )
             await self.session.commit()
@@ -102,6 +103,7 @@ class IngestionService:
             ended_at=result.ended_at,
             status=ScraperRunStatus.success,
             items_extracted=count,
+            screenings_found=len(result.screenings),
         )
         await self.session.commit()
         logger.info(

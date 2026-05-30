@@ -30,6 +30,7 @@ class ScraperRun(Base):
         Enum(ScraperRunStatus, name="scraper_run_status")
     )
     items_extracted: Mapped[int | None] = mapped_column(Integer)
+    screenings_found: Mapped[int | None] = mapped_column(Integer)
     error_message: Mapped[str | None] = mapped_column(Text)
 
     theatre: Mapped[Theatre] = relationship(back_populates="scraper_runs")
