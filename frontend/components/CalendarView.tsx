@@ -8,6 +8,7 @@ import type { ScreeningData, TheatreData } from "@/lib/api";
 import {
   buildCalendarWeeks,
   displayTitle,
+  formatAgendaDate,
   formatMonthLabel,
   formatTime,
   nextMonth,
@@ -77,6 +78,11 @@ export function CalendarView({ theatres, screenings, month }: Props) {
   const [year, m] = month.split("-").map(Number);
   const today = todayKey();
 
+  const monthPrefix = `${String(year)}-${String(m).padStart(2, "0")}`;
+  const agendaDates = Object.keys(byDate)
+    .filter((k) => k.startsWith(monthPrefix))
+    .sort();
+
   return (
     <div className="min-h-screen bg-zinc-50">
       {/* Header */}
@@ -139,8 +145,8 @@ export function CalendarView({ theatres, screenings, month }: Props) {
         </div>
       </div>
 
-      {/* Calendar */}
-      <main className="max-w-7xl mx-auto px-4 py-4">
+      {/* Desktop: month grid */}
+      <main className="hidden md:block max-w-7xl mx-auto px-4 py-4">
         {/* Day-of-week headers */}
         <div className="grid grid-cols-7 mb-1">
           {DAY_LABELS.map((d) => (
@@ -169,7 +175,6 @@ export function CalendarView({ theatres, screenings, month }: Props) {
                 key={i}
                 className={`min-h-24 p-1.5 ${inMonth ? "bg-white" : "bg-zinc-50"}`}
               >
-                {/* Date number */}
                 {isToday ? (
                   <div className="flex justify-end mb-1">
                     <span className="w-6 h-6 bg-zinc-900 text-white rounded-full flex items-center justify-center text-xs font-semibold">
@@ -184,7 +189,6 @@ export function CalendarView({ theatres, screenings, month }: Props) {
                   </div>
                 )}
 
-                {/* Screenings */}
                 <div className="space-y-0.5">
                   {groupByTheatre(visible).map((group) => (
                     <div key={group.name} className="border-t border-zinc-100 pt-0.5 mt-0.5 first:border-t-0 first:pt-0 first:mt-0">
@@ -223,6 +227,58 @@ export function CalendarView({ theatres, screenings, month }: Props) {
           <p className="text-center text-zinc-400 text-sm mt-8">
             No screenings found for this month.
           </p>
+        )}
+      </main>
+
+      {/* Mobile: agenda list */}
+      <main className="md:hidden max-w-7xl mx-auto px-4 py-4">
+        {agendaDates.length === 0 ? (
+          <p className="text-center text-zinc-400 text-sm mt-8">
+            No screenings found for this month.
+          </p>
+        ) : (
+          <div className="space-y-6">
+            {agendaDates.map((key) => (
+              <section key={key}>
+                <h2
+                  className={`text-sm font-semibold mb-2 pb-1 border-b ${
+                    key === today
+                      ? "text-zinc-900 border-zinc-900"
+                      : "text-zinc-500 border-zinc-200"
+                  }`}
+                >
+                  {formatAgendaDate(key, today)}
+                </h2>
+                <div className="space-y-3">
+                  {groupByTheatre(byDate[key]).map((group) => (
+                    <div key={group.name}>
+                      <div className="text-[10px] uppercase tracking-wider text-zinc-400 font-medium mb-1">
+                        {group.name}
+                      </div>
+                      <div className="space-y-0.5">
+                        {group.screenings.map((s) => (
+                          <a
+                            key={s.id}
+                            href={screeningUrl(s)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex gap-3 items-baseline py-1 px-2 -mx-2 rounded active:bg-zinc-100"
+                          >
+                            <span className="text-xs tabular-nums text-zinc-400 shrink-0 w-16">
+                              {formatTime(s.start_time)}
+                            </span>
+                            <span className="text-sm text-zinc-800">
+                              {displayTitle(s.movie.title)}
+                            </span>
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            ))}
+          </div>
         )}
       </main>
     </div>

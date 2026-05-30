@@ -77,6 +77,14 @@ export function toDateKey(date: Date): string {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 }
 
+export function formatAgendaDate(key: string, today: string): string {
+  const [year, month, day] = key.split("-").map(Number);
+  const date = new Date(year, month - 1, day);
+  const weekday = key === today ? "Today" : date.toLocaleDateString("en-CA", { weekday: "long" });
+  const label = date.toLocaleDateString("en-CA", { month: "long", day: "numeric" });
+  return `${weekday}, ${label}`;
+}
+
 // Returns the Toronto-local YYYY-MM-DD for a UTC/offset datetime string
 export function screeningDateKey(isoString: string): string {
   return new Date(isoString).toLocaleDateString("en-CA", {
