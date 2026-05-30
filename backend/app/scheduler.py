@@ -18,6 +18,7 @@ from app.database import async_session_factory
 from app.ingestion.seed import seed_theatres
 from app.ingestion.service import ingest_all
 from app.logging_config import setup_logging
+from app.repositories.theatre import TheatreRepository
 from app.scrapers.runner import run_all_scrapers
 from app.scrapers.theatres import get_all_scrapers
 
@@ -26,7 +27,13 @@ logger = logging.getLogger(__name__)
 
 async def run_pipeline() -> None:
     logger.info("pipeline_start")
-    scrapers = get_all_scrapers()
+    async with async_session_factory() as session:
+        enabled_slugs = {
+            t.slug for t in await TheatreRepository(session).get_all()
+            if t.is_cron_enabled
+        }
+    scrapers = [s for s in get_all_scrapers() if s.config.slug in enabled_slugs]
+    logger.info("pipeline_scrapers", extra={"enabled": len(scrapers), "total": len(get_all_scrapers())})
     results = await run_all_scrapers(scrapers)
     async with async_session_factory() as session:
         await ingest_all(results, session)
