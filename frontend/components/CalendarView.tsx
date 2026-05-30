@@ -365,13 +365,11 @@ export function CalendarView({ theatres, screenings, month }: Props) {
                         {group.name}
                       </div>
                       {group.screenings.map((s) => (
-                        <a
+                        <ScreeningLink
                           key={s.id}
-                          href={screeningUrl(s)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          onClick={(e) => handleScreeningClick(e, s)}
-                          className="text-xs leading-snug truncate flex gap-1 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded"
+                          s={s}
+                          activeClassName="text-xs leading-snug truncate flex gap-1 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded"
+                          onClickScreening={handleScreeningClick}
                           title={`${displayTitle(s.movie.title)} — ${s.theatre.name} — ${formatTime(s.start_time)}`}
                         >
                           <span className="text-zinc-400 dark:text-zinc-500 tabular-nums shrink-0">
@@ -380,7 +378,7 @@ export function CalendarView({ theatres, screenings, month }: Props) {
                           <span className="text-zinc-800 dark:text-zinc-200 truncate">
                             {displayTitle(s.movie.title)}
                           </span>
-                        </a>
+                        </ScreeningLink>
                       ))}
                     </div>
                   ))}
@@ -449,13 +447,11 @@ export function CalendarView({ theatres, screenings, month }: Props) {
                           </div>
                           <div className="space-y-0.5">
                             {group.screenings.map((s) => (
-                              <a
+                              <ScreeningLink
                                 key={s.id}
-                                href={screeningUrl(s)}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                onClick={(e) => handleScreeningClick(e, s)}
-                                className="flex gap-3 items-baseline py-1.5 px-2 -mx-2 rounded active:bg-zinc-100 dark:active:bg-zinc-800"
+                                s={s}
+                                activeClassName="flex gap-3 items-baseline py-1.5 px-2 -mx-2 rounded active:bg-zinc-100 dark:active:bg-zinc-800"
+                                onClickScreening={handleScreeningClick}
                               >
                                 <span className="text-xs tabular-nums text-zinc-400 dark:text-zinc-500 shrink-0 w-16">
                                   {formatTime(s.start_time)}
@@ -463,7 +459,7 @@ export function CalendarView({ theatres, screenings, month }: Props) {
                                 <span className="text-sm text-zinc-800 dark:text-zinc-200">
                                   {displayTitle(s.movie.title)}
                                 </span>
-                              </a>
+                              </ScreeningLink>
                             ))}
                           </div>
                         </div>
@@ -500,6 +496,50 @@ interface TheatreGroup {
   name: string;
   screenings: ScreeningData[];
 }
+
+function isPast(startTime: string): boolean {
+  return new Date(startTime) < new Date();
+}
+
+// ---------------------------------------------------------------------------
+
+interface ScreeningLinkProps {
+  s: ScreeningData;
+  activeClassName: string;
+  onClickScreening: (e: React.MouseEvent<HTMLAnchorElement>, s: ScreeningData) => void;
+  title?: string;
+  role?: string;
+  children: React.ReactNode;
+}
+
+function ScreeningLink({ s, activeClassName, onClickScreening, title, role, children }: ScreeningLinkProps) {
+  if (isPast(s.start_time)) {
+    return (
+      <span
+        role={role}
+        title={title}
+        className={`${activeClassName} opacity-40 cursor-default`}
+      >
+        {children}
+      </span>
+    );
+  }
+  return (
+    <a
+      href={screeningUrl(s)}
+      target="_blank"
+      rel="noopener noreferrer"
+      onClick={(e) => onClickScreening(e, s)}
+      role={role}
+      title={title}
+      className={activeClassName}
+    >
+      {children}
+    </a>
+  );
+}
+
+// ---------------------------------------------------------------------------
 
 function groupByTheatre(screenings: ScreeningData[]): TheatreGroup[] {
   const map = new Map<string, TheatreGroup>();
@@ -579,14 +619,12 @@ function OverflowBadge({ groups, onClickScreening }: OverflowBadgeProps) {
                   {group.name}
                 </div>
                 {group.screenings.map((s) => (
-                  <a
+                  <ScreeningLink
                     key={s.id}
+                    s={s}
                     role="listitem"
-                    href={screeningUrl(s)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={(e) => onClickScreening(e, s)}
-                    className="flex items-baseline gap-2 px-3 py-0.5 text-xs hover:bg-zinc-50 dark:hover:bg-zinc-800"
+                    activeClassName="flex items-baseline gap-2 px-3 py-0.5 text-xs hover:bg-zinc-50 dark:hover:bg-zinc-800"
+                    onClickScreening={onClickScreening}
                     title={`${displayTitle(s.movie.title)} — ${s.theatre.name}`}
                   >
                     <span className="shrink-0 tabular-nums text-zinc-400 dark:text-zinc-500">
@@ -595,7 +633,7 @@ function OverflowBadge({ groups, onClickScreening }: OverflowBadgeProps) {
                     <span className="truncate text-zinc-700 dark:text-zinc-300">
                       {displayTitle(s.movie.title)}
                     </span>
-                  </a>
+                  </ScreeningLink>
                 ))}
               </div>
             ))}
