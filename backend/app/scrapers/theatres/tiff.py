@@ -4,9 +4,9 @@ from datetime import date, datetime
 from zoneinfo import ZoneInfo
 
 from bs4 import BeautifulSoup
+from playwright.async_api import async_playwright
 
-from app.scrapers.base import RawScreening, TheatreConfig
-from app.scrapers.js_rendered import JSRenderedScraper
+from app.scrapers.base import BaseScraper, RawScreening, ScraperStrategy, TheatreConfig
 
 logger = logging.getLogger(__name__)
 
@@ -26,8 +26,41 @@ _SKIP_TITLES = (
 _TIME_RE = re.compile(r"(\d{1,2}):(\d{2})(am|pm)", re.IGNORECASE)
 _ID_RE = re.compile(r"^calendar-item-(\d{2})-(\d{2})-(\d{2})$")
 
+# Injected before page scripts run to mask headless-browser signals.
+_STEALTH_SCRIPT = """
+Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
+Object.defineProperty(navigator, 'plugins', { get: () => [1, 2, 3, 4, 5] });
+Object.defineProperty(navigator, 'languages', { get: () => ['en-CA', 'en'] });
+window.chrome = { runtime: {} };
+"""
 
-class TIFFScraper(JSRenderedScraper):
+
+class TIFFScraper(BaseScraper):
+    strategy = ScraperStrategy.js_rendered
+
+    async def scrape(self) -> list[RawScreening]:
+        async with async_playwright() as playwright:
+            browser = await playwright.chromium.launch(
+                args=["--disable-blink-features=AutomationControlled"]
+            )
+            try:
+                context = await browser.new_context(
+                    user_agent=(
+                        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+                        "AppleWebKit/537.36 (KHTML, like Gecko) "
+                        "Chrome/124.0.0.0 Safari/537.36"
+                    ),
+                    viewport={"width": 1280, "height": 800},
+                    locale="en-CA",
+                )
+                await context.add_init_script(_STEALTH_SCRIPT)
+                page = await context.new_page()
+                await page.goto(self.config.source_url, wait_until="networkidle")
+                html = await page.content()
+            finally:
+                await browser.close()
+        return self.parse(html)
+
     def parse(self, html: str) -> list[RawScreening]:
         soup = BeautifulSoup(html, "html.parser")
         screenings: list[RawScreening] = []

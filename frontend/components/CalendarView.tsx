@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
 import type { ScreeningData, TheatreData } from "@/lib/api";
@@ -43,6 +43,13 @@ export function CalendarView({ theatres, screenings, month }: Props) {
   const [selectedSlugs, setSelectedSlugs] = useState<Set<string>>(
     () => new Set(theatres.map((t) => t.slug))
   );
+  const [inputValue, setInputValue] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+
+  useEffect(() => {
+    const id = setTimeout(() => setSearchTerm(inputValue.trim()), 250);
+    return () => clearTimeout(id);
+  }, [inputValue]);
 
   function toggleSlug(slug: string) {
     setSelectedSlugs((prev) => {
@@ -52,10 +59,9 @@ export function CalendarView({ theatres, screenings, month }: Props) {
     });
   }
 
-  const filtered =
-    selectedSlugs.size === theatres.length
-      ? screenings
-      : screenings.filter((s) => selectedSlugs.has(s.theatre.slug));
+  const filtered = screenings
+    .filter((s) => selectedSlugs.size === theatres.length || selectedSlugs.has(s.theatre.slug))
+    .filter((s) => !searchTerm || displayTitle(s.movie.title).toLowerCase().includes(searchTerm.toLowerCase()));
 
   const byDate = filtered.reduce<Record<string, ScreeningData[]>>((acc, s) => {
     const key = screeningDateKey(s.start_time);
@@ -117,6 +123,19 @@ export function CalendarView({ theatres, screenings, month }: Props) {
               onClick={() => toggleSlug(t.slug)}
             />
           ))}
+        </div>
+      </div>
+
+      {/* Search */}
+      <div className="bg-white border-b border-zinc-200 px-4 py-2">
+        <div className="max-w-7xl mx-auto">
+          <input
+            type="search"
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            placeholder="Search screenings…"
+            className="w-full sm:w-72 px-3 py-1.5 text-sm rounded-full border border-zinc-200 bg-zinc-50 text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent"
+          />
         </div>
       </div>
 
