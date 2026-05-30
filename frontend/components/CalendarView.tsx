@@ -52,18 +52,24 @@ export function CalendarView({ theatres, screenings, month }: Props) {
     return () => clearTimeout(id);
   }, [inputValue]);
 
-  const selectAll = () => setSelectedSlugs(new Set(theatres.map((t) => t.slug)));
+  const allSelected = selectedSlugs.size === theatres.length;
+
+  function selectAll() {
+    setSelectedSlugs(
+      allSelected ? new Set() : new Set(theatres.map((t) => t.slug))
+    );
+  }
 
   function toggleSlug(slug: string) {
     setSelectedSlugs((prev) => {
       const next = new Set(prev);
       next.has(slug) ? next.delete(slug) : next.add(slug);
-      return next.size === 0 ? new Set(theatres.map((t) => t.slug)) : next;
+      return next;
     });
   }
 
   const filtered = screenings
-    .filter((s) => selectedSlugs.size === theatres.length || selectedSlugs.has(s.theatre.slug))
+    .filter((s) => allSelected || selectedSlugs.has(s.theatre.slug))
     .filter((s) => !searchTerm || displayTitle(s.movie.title).toLowerCase().includes(searchTerm.toLowerCase()));
 
   const byDate = filtered.reduce<Record<string, ScreeningData[]>>((acc, s) => {
@@ -129,7 +135,7 @@ export function CalendarView({ theatres, screenings, month }: Props) {
           <div className="hidden md:flex flex-wrap gap-2 py-0.5">
             <FilterButton
               label="All"
-              active={selectedSlugs.size === theatres.length}
+              active={allSelected}
               onClick={selectAll}
             />
             {theatres.map((t) => (
