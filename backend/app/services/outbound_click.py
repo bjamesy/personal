@@ -11,8 +11,8 @@ class OutboundClickService:
     def __init__(self, session: AsyncSession) -> None:
         self.repository = OutboundClickRepository(session)
 
-    async def record_click(self, screening_id: uuid.UUID, theatre_id: uuid.UUID) -> OutboundClick:
-        click = await self.repository.create(screening_id, theatre_id)
+    async def record_click(self, screening_id: uuid.UUID) -> OutboundClick:
+        click = await self.repository.create(screening_id)
         await self.repository.session.commit()
         return click
 

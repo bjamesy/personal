@@ -13,11 +13,10 @@ class RestaurantInterestEventService:
     async def record(
         self,
         outbound_click_id: uuid.UUID,
-        theatre_id: uuid.UUID,
         interest_type: RestaurantInterestType,
     ) -> RestaurantInterestEvent | None:
         event = await self.repository.create_if_not_exists(
-            outbound_click_id, theatre_id, interest_type
+            outbound_click_id, interest_type
         )
         await self.repository.session.commit()
         return event

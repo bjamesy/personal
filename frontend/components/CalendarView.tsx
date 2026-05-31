@@ -74,6 +74,7 @@ export function CalendarView({ theatres, screenings, month }: Props) {
   const [recommendationsModal, setRecommendationsModal] = useState<{
     restaurants: RestaurantResult[];
     screeningId: string;
+    outboundClickId: string;
     theatreId: string;
     theatreName: string;
     interestType: RestaurantInterestType;
@@ -135,7 +136,7 @@ export function CalendarView({ theatres, screenings, month }: Props) {
       localStorage.setItem(PENDING_CLICK_KEY, JSON.stringify(placeholder));
     } catch {}
 
-    const click = await recordOutboundClick(s.id, s.theatre.id);
+    const click = await recordOutboundClick(s.id);
     if (click) {
       try {
         const pending: PendingClick = { id: click.id, screeningId: s.id, theatreId: s.theatre.id, theatreName: s.theatre.name };
@@ -176,7 +177,7 @@ export function CalendarView({ theatres, screenings, month }: Props) {
     setRestaurantModal(null);
     if (!state) return;
 
-    await recordRestaurantInterest(state.clickId, state.theatreId, answer);
+    await recordRestaurantInterest(state.clickId, answer);
 
     if (answer === "declined") return;
 
@@ -186,6 +187,7 @@ export function CalendarView({ theatres, screenings, month }: Props) {
     setRecommendationsModal({
       restaurants,
       screeningId: state.screeningId,
+      outboundClickId: state.clickId,
       theatreId: state.theatreId,
       theatreName: state.theatreName,
       interestType: answer,
@@ -200,10 +202,11 @@ export function CalendarView({ theatres, screenings, month }: Props) {
     if (!recommendationsModal) return;
     await recordRecommendationClick(
       recommendationsModal.screeningId,
+      recommendationsModal.outboundClickId,
       restaurant.name,
       recommendationsModal.interestType,
-      restaurant.google_place_id,
-      restaurant.google_place_metadata
+      restaurant.place_id,
+      restaurant.place_metadata
     );
   }
 

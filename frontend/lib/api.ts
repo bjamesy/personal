@@ -49,21 +49,19 @@ export type TicketConfirmedStatus = "yes" | "no" | "not_yet";
 export interface OutboundClickData {
   id: string;
   screening_id: string;
-  theatre_id: string;
-  clicked_at: string;
+  created_at: string;
   ticket_confirmed: TicketConfirmedStatus | null;
   prompted_at: string | null;
 }
 
 export async function recordOutboundClick(
-  screening_id: string,
-  theatre_id: string
+  screening_id: string
 ): Promise<OutboundClickData | null> {
   try {
     const res = await fetch(`${PUBLIC_API_URL}/outbound-clicks`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ screening_id, theatre_id }),
+      body: JSON.stringify({ screening_id }),
     });
     if (!res.ok) return null;
     return res.json();
@@ -79,8 +77,8 @@ export interface RestaurantResult {
   rating: number | null;
   address: string | null;
   google_maps_url: string | null;
-  google_place_id: string | null;
-  google_place_metadata: Record<string, unknown> | null;
+  place_id: string | null;
+  place_metadata: Record<string, unknown> | null;
 }
 
 export async function fetchRestaurants(
@@ -101,16 +99,17 @@ export async function fetchRestaurants(
 
 export async function recordRecommendationClick(
   screening_id: string,
-  google_restaurant_name: string,
+  outbound_click_id: string | null,
+  restaurant_name: string,
   interest_type: RestaurantInterestType,
-  google_place_id: string | null,
-  google_place_metadata: Record<string, unknown> | null
+  place_id: string | null,
+  place_metadata: Record<string, unknown> | null
 ): Promise<void> {
   try {
     await fetch(`${PUBLIC_API_URL}/restaurant-recommendation-clicks`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ screening_id, google_restaurant_name, interest_type, google_place_id, google_place_metadata }),
+      body: JSON.stringify({ screening_id, outbound_click_id, restaurant_name, interest_type, place_id, place_metadata }),
     });
   } catch {
     // best-effort
@@ -119,14 +118,13 @@ export async function recordRecommendationClick(
 
 export async function recordRestaurantInterest(
   outbound_click_id: string,
-  theatre_id: string,
   interest_type: RestaurantInterestType
 ): Promise<void> {
   try {
     await fetch(`${PUBLIC_API_URL}/restaurant-interest-events`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ outbound_click_id, theatre_id, interest_type }),
+      body: JSON.stringify({ outbound_click_id, interest_type }),
     });
   } catch {
     // best-effort

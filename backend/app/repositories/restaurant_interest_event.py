@@ -13,14 +13,12 @@ class RestaurantInterestEventRepository:
     async def create_if_not_exists(
         self,
         outbound_click_id: uuid.UUID,
-        theatre_id: uuid.UUID,
         interest_type: RestaurantInterestType,
     ) -> RestaurantInterestEvent | None:
         stmt = (
             pg_insert(RestaurantInterestEvent)
             .values(
                 outbound_click_id=outbound_click_id,
-                theatre_id=theatre_id,
                 interest_type=interest_type,
             )
             .on_conflict_do_nothing(index_elements=["outbound_click_id"])

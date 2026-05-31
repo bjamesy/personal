@@ -16,7 +16,8 @@ class RestaurantResult(BaseModel):
 
 class RestaurantRecommendationClickCreate(BaseModel):
     screening_id: uuid.UUID
-    google_restaurant_name: str
+    outbound_click_id: uuid.UUID | None = None
+    restaurant_name: str
     interest_type: RestaurantInterestType
-    google_place_id: str | None = None
-    google_place_metadata: dict | None = None
+    place_id: str | None = None
+    place_metadata: dict | None = None

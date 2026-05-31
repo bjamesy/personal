@@ -66,7 +66,7 @@ async def _auto_disable_failing_scrapers(
         def _is_failed(run) -> bool:
             return (
                 run.status == ScraperRunStatus.failure
-                or (run.screenings_found is not None and run.screenings_found == 0)
+                or (run.screenings_scraped is not None and run.screenings_scraped == 0)
             )
 
         if all(_is_failed(r) for r in recent):

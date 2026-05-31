@@ -60,8 +60,8 @@ async def fetch_nearby_restaurants(
             "rating": p.get("rating"),
             "address": p.get("formattedAddress"),
             "google_maps_url": p.get("googleMapsUri"),
-            "google_place_id": p.get("id"),
-            "google_place_metadata": p,
+            "place_id": p.get("id"),
+            "place_metadata": p,
         }
         for p in data.get("places", [])
         if "displayName" in p

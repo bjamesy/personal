@@ -11,8 +11,8 @@ class OutboundClickRepository:
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
 
-    async def create(self, screening_id: uuid.UUID, theatre_id: uuid.UUID) -> OutboundClick:
-        click = OutboundClick(screening_id=screening_id, theatre_id=theatre_id)
+    async def create(self, screening_id: uuid.UUID) -> OutboundClick:
+        click = OutboundClick(screening_id=screening_id)
         self.session.add(click)
         await self.session.flush()
         await self.session.refresh(click)

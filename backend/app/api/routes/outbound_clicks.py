@@ -14,12 +14,11 @@ async def create_outbound_click(
     body: OutboundClickCreate,
     service: OutboundClickService = Depends(get_outbound_click_service),
 ) -> OutboundClickResponse:
-    click = await service.record_click(body.screening_id, body.theatre_id)
+    click = await service.record_click(body.screening_id)
     return OutboundClickResponse(
         id=click.id,
         screening_id=click.screening_id,
-        theatre_id=click.theatre_id,
-        clicked_at=click.clicked_at,
+        created_at=click.created_at,
         ticket_confirmed=click.ticket_confirmed,
         prompted_at=click.prompted_at,
     )
@@ -37,8 +36,7 @@ async def patch_outbound_click(
     return OutboundClickResponse(
         id=click.id,
         screening_id=click.screening_id,
-        theatre_id=click.theatre_id,
-        clicked_at=click.clicked_at,
+        created_at=click.created_at,
         ticket_confirmed=click.ticket_confirmed,
         prompted_at=click.prompted_at,
     )

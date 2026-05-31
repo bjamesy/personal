@@ -13,17 +13,19 @@ class RestaurantRecommendationClickRepository:
     async def create(
         self,
         screening_id: uuid.UUID,
-        google_restaurant_name: str,
+        restaurant_name: str,
         interest_type: RestaurantInterestType,
-        google_place_id: str | None = None,
-        google_place_metadata: dict | None = None,
+        outbound_click_id: uuid.UUID | None = None,
+        place_id: str | None = None,
+        place_metadata: dict | None = None,
     ) -> RestaurantRecommendationClick:
         click = RestaurantRecommendationClick(
             screening_id=screening_id,
-            google_restaurant_name=google_restaurant_name,
+            outbound_click_id=outbound_click_id,
+            restaurant_name=restaurant_name,
             interest_type=interest_type,
-            google_place_id=google_place_id,
-            google_place_metadata=google_place_metadata,
+            place_id=place_id,
+            place_metadata=place_metadata,
         )
         self.session.add(click)
         await self.session.flush()

@@ -15,7 +15,8 @@ class ScraperRunResponse(BaseModel):
     started_at: datetime
     ended_at: datetime | None
     status: ScraperRunStatus | None
-    items_extracted: int | None
+    screenings_scraped: int | None
+    screenings_inserted: int | None
     error_message: str | None
 
     @field_serializer("status")

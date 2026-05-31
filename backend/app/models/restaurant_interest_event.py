@@ -12,7 +12,6 @@ from app.models.base import Base
 
 if TYPE_CHECKING:
     from app.models.outbound_click import OutboundClick
-    from app.models.theatre import Theatre
 
 
 class RestaurantInterestType(str, enum.Enum):
@@ -28,7 +27,6 @@ class RestaurantInterestEvent(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
     outbound_click_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("outbound_clicks.id"))
-    theatre_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("theatres.id"))
     interest_type: Mapped[RestaurantInterestType] = mapped_column(
         Enum(RestaurantInterestType, name="restaurant_interest_type")
     )
@@ -37,4 +35,3 @@ class RestaurantInterestEvent(Base):
     )
 
     outbound_click: Mapped[OutboundClick] = relationship()
-    theatre: Mapped[Theatre] = relationship()

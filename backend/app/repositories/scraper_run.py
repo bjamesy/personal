@@ -23,8 +23,8 @@ class ScraperRunRepository:
         scraper_run_id: uuid.UUID,
         ended_at: datetime,
         status: ScraperRunStatus,
-        items_extracted: int | None = None,
-        screenings_found: int | None = None,
+        screenings_scraped: int | None = None,
+        screenings_inserted: int | None = None,
         error_message: str | None = None,
     ) -> ScraperRun:
         result = await self.session.execute(
@@ -33,8 +33,8 @@ class ScraperRunRepository:
         scraper_run = result.scalar_one()
         scraper_run.ended_at = ended_at
         scraper_run.status = status
-        scraper_run.items_extracted = items_extracted
-        scraper_run.screenings_found = screenings_found
+        scraper_run.screenings_scraped = screenings_scraped
+        scraper_run.screenings_inserted = screenings_inserted
         scraper_run.error_message = error_message
         await self.session.flush()
         return scraper_run

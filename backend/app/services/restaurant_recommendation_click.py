@@ -14,11 +14,12 @@ class RestaurantRecommendationClickService:
     async def record(
         self,
         screening_id: uuid.UUID,
-        google_restaurant_name: str,
+        restaurant_name: str,
         interest_type: RestaurantInterestType,
-        google_place_id: str | None = None,
-        google_place_metadata: dict | None = None,
+        outbound_click_id: uuid.UUID | None = None,
+        place_id: str | None = None,
+        place_metadata: dict | None = None,
     ) -> RestaurantRecommendationClick:
-        click = await self.repository.create(screening_id, google_restaurant_name, interest_type, google_place_id, google_place_metadata)
+        click = await self.repository.create(screening_id, restaurant_name, interest_type, outbound_click_id, place_id, place_metadata)
         await self.repository.session.commit()
         return click
