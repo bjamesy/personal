@@ -15,7 +15,7 @@ class RestaurantResult(BaseModel):
 
 
 class RestaurantRecommendationClickCreate(BaseModel):
-    theatre_id: uuid.UUID
+    screening_id: uuid.UUID
     google_restaurant_name: str
     interest_type: RestaurantInterestType
     google_place_id: str | None = None

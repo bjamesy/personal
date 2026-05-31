@@ -100,7 +100,7 @@ export async function fetchRestaurants(
 }
 
 export async function recordRecommendationClick(
-  theatre_id: string,
+  screening_id: string,
   google_restaurant_name: string,
   interest_type: RestaurantInterestType,
   google_place_id: string | null,
@@ -110,7 +110,7 @@ export async function recordRecommendationClick(
     await fetch(`${PUBLIC_API_URL}/restaurant-recommendation-clicks`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ theatre_id, google_restaurant_name, interest_type, google_place_id, google_place_metadata }),
+      body: JSON.stringify({ screening_id, google_restaurant_name, interest_type, google_place_id, google_place_metadata }),
     });
   } catch {
     // best-effort
