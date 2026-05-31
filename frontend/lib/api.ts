@@ -160,3 +160,25 @@ export async function fetchScreenings(month: string): Promise<ScreeningData[]> {
     return [];
   }
 }
+
+export interface CalendarSubscriptionResponse {
+  token: string;
+  feed_url: string;
+}
+
+export async function createCalendarSubscription(
+  theatre_ids: string[],
+  label?: string
+): Promise<CalendarSubscriptionResponse | null> {
+  try {
+    const res = await fetch(`${PUBLIC_API_URL}/calendar-subscriptions`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ theatre_ids, label }),
+    });
+    if (!res.ok) return null;
+    return res.json();
+  } catch {
+    return null;
+  }
+}

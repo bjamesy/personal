@@ -7,6 +7,7 @@ import { createPortal } from "react-dom";
 
 import type { RestaurantInterestType, RestaurantResult, ScreeningData, TheatreData, TicketConfirmedStatus } from "@/lib/api";
 import { fetchRestaurants, patchOutboundClick, recordOutboundClick, recordRecommendationClick, recordRestaurantInterest } from "@/lib/api";
+import { CalendarSubscribeModal } from "@/components/CalendarSubscribeModal";
 import { RestaurantInterestModal } from "@/components/RestaurantInterestModal";
 import { RestaurantRecommendationsModal } from "@/components/RestaurantRecommendationsModal";
 import { TicketFollowUpModal } from "@/components/TicketFollowUpModal";
@@ -77,6 +78,7 @@ export function CalendarView({ theatres, screenings, month }: Props) {
     theatreName: string;
     interestType: RestaurantInterestType;
   } | null>(null);
+  const [calendarSubscribeOpen, setCalendarSubscribeOpen] = useState(false);
   const modalTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingTheatreRef = useRef<{ screeningId: string; theatreId: string; theatreName: string } | null>(null);
 
@@ -295,8 +297,8 @@ export function CalendarView({ theatres, screenings, month }: Props) {
       {/* Theatre filter */}
       <div className="bg-white/60 dark:bg-zinc-900/60 backdrop-blur-sm border-b border-zinc-200/60 dark:border-zinc-800/60 px-4 py-2.5">
         <div className="max-w-7xl mx-auto">
-          {/* Desktop: pill buttons */}
-          <div className="hidden md:flex flex-wrap gap-2 py-0.5">
+          {/* Desktop: pill buttons + subscribe */}
+          <div className="hidden md:flex flex-wrap items-center gap-2 py-0.5">
             <FilterButton
               label="All"
               active={allSelected}
@@ -311,15 +313,35 @@ export function CalendarView({ theatres, screenings, month }: Props) {
                 onClick={() => toggleSlug(t.slug)}
               />
             ))}
+            <button
+              onClick={() => setCalendarSubscribeOpen(true)}
+              className="ml-auto flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+              aria-label="Subscribe to Calendar"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="w-3.5 h-3.5 shrink-0" aria-hidden="true">
+                <path fillRule="evenodd" d="M4 1.75a.75.75 0 0 1 1.5 0V3h5V1.75a.75.75 0 0 1 1.5 0V3h.25A2.75 2.75 0 0 1 15 5.75v7.5A2.75 2.75 0 0 1 12.25 16H3.75A2.75 2.75 0 0 1 1 13.25v-7.5A2.75 2.75 0 0 1 3.75 3H4V1.75ZM3.75 4.5c-.69 0-1.25.56-1.25 1.25V6.5h11V5.75c0-.69-.56-1.25-1.25-1.25H3.75ZM2.5 8v5.25c0 .69.56 1.25 1.25 1.25h8.5c.69 0 1.25-.56 1.25-1.25V8h-11Z" clipRule="evenodd" />
+              </svg>
+              Subscribe
+            </button>
           </div>
-          {/* Mobile: dropdown */}
-          <div className="md:hidden">
+          {/* Mobile: dropdown + subscribe */}
+          <div className="md:hidden flex items-center gap-2">
             <TheatreDropdown
               theatres={theatres}
               selectedSlugs={selectedSlugs}
               onToggle={toggleSlug}
               onSelectAll={selectAll}
             />
+            <button
+              onClick={() => setCalendarSubscribeOpen(true)}
+              className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors shrink-0"
+              aria-label="Subscribe to Calendar"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="w-3.5 h-3.5 shrink-0" aria-hidden="true">
+                <path fillRule="evenodd" d="M4 1.75a.75.75 0 0 1 1.5 0V3h5V1.75a.75.75 0 0 1 1.5 0V3h.25A2.75 2.75 0 0 1 15 5.75v7.5A2.75 2.75 0 0 1 12.25 16H3.75A2.75 2.75 0 0 1 1 13.25v-7.5A2.75 2.75 0 0 1 3.75 3H4V1.75ZM3.75 4.5c-.69 0-1.25.56-1.25 1.25V6.5h11V5.75c0-.69-.56-1.25-1.25-1.25H3.75ZM2.5 8v5.25c0 .69.56 1.25 1.25 1.25h8.5c.69 0 1.25-.56 1.25-1.25V8h-11Z" clipRule="evenodd" />
+              </svg>
+              Subscribe
+            </button>
           </div>
         </div>
       </div>
@@ -548,6 +570,13 @@ export function CalendarView({ theatres, screenings, month }: Props) {
           interestType={recommendationsModal.interestType}
           onClickRestaurant={handleRecommendationClick}
           onDismiss={() => setRecommendationsModal(null)}
+        />
+      )}
+      {calendarSubscribeOpen && (
+        <CalendarSubscribeModal
+          theatres={theatres}
+          initialSlugs={selectedSlugs}
+          onClose={() => setCalendarSubscribeOpen(false)}
         />
       )}
     </div>

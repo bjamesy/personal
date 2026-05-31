@@ -4,6 +4,7 @@ from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_session
+from app.services.calendar_subscription import CalendarSubscriptionService
 from app.services.outbound_click import OutboundClickService
 from app.services.restaurant_interest_event import RestaurantInterestEventService
 from app.services.restaurant_recommendation_click import RestaurantRecommendationClickService
@@ -46,3 +47,9 @@ async def get_scraper_run_service(
     session: AsyncSession = Depends(get_session),
 ) -> AsyncGenerator[ScraperRunService, None]:
     yield ScraperRunService(session)
+
+
+async def get_calendar_subscription_service(
+    session: AsyncSession = Depends(get_session),
+) -> AsyncGenerator[CalendarSubscriptionService, None]:
+    yield CalendarSubscriptionService(session)

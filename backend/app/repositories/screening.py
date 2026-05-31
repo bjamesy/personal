@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from sqlalchemy import delete, select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
@@ -79,3 +79,18 @@ class ScreeningRepository:
         )
         result = await self.session.execute(stmt)
         return result.rowcount
+
+    async def get_upcoming_for_theatres(
+        self, theatre_ids: list[uuid.UUID], days_ahead: int = 90
+    ) -> list[Screening]:
+        now = datetime.now(timezone.utc)
+        cutoff = now + timedelta(days=days_ahead)
+        result = await self.session.execute(
+            select(Screening)
+            .options(selectinload(Screening.theatre), selectinload(Screening.movie))
+            .where(Screening.theatre_id.in_(theatre_ids))
+            .where(Screening.start_time >= now)
+            .where(Screening.start_time <= cutoff)
+            .order_by(Screening.start_time)
+        )
+        return list(result.scalars().all())
