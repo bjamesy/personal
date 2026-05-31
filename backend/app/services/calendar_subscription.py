@@ -10,6 +10,7 @@ from icalendar import Calendar, Event
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config import settings
 from app.models.calendar_subscription import CalendarSubscription
 from app.repositories.calendar_subscription import CalendarSubscriptionRepository
 from app.repositories.screening import ScreeningRepository
@@ -78,7 +79,10 @@ class CalendarSubscriptionService:
             event.add("dtend", dtend)
             event.add("location", screening.theatre.name)
             event.add("url", ticket_url)
-            event.add("description", f"Tickets: {ticket_url}")
+            description = f"Tickets: {ticket_url}"
+            if settings.public_base_url:
+                description += f"\n{settings.public_base_url.rstrip('/')}"
+            event.add("description", description)
             cal.add_component(event)
 
         cal.add_missing_timezones()
