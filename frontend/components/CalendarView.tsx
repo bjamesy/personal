@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
@@ -215,9 +216,20 @@ export function CalendarView({ theatres, screenings, month }: Props) {
     .sort();
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
+    <div className="min-h-screen relative">
+      {/* Background image */}
+      <div className="fixed inset-0 -z-10">
+        <Image
+          src="/llewyn.webp"
+          alt=""
+          fill
+          priority
+          className="object-cover object-center"
+        />
+        <div className="absolute inset-0 bg-white/55 dark:bg-zinc-950/65" />
+      </div>
       {/* Header */}
-      <header className="bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 px-4 py-4">
+      <header className="bg-white/60 dark:bg-zinc-900/60 backdrop-blur-sm border-b border-zinc-200/60 dark:border-zinc-800/60 px-4 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
           <h1 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100 tracking-tight">
             Toronto Theatre Screenings
@@ -246,7 +258,7 @@ export function CalendarView({ theatres, screenings, month }: Props) {
       </header>
 
       {/* Theatre filter */}
-      <div className="bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 px-4 py-2.5">
+      <div className="bg-white/60 dark:bg-zinc-900/60 backdrop-blur-sm border-b border-zinc-200/60 dark:border-zinc-800/60 px-4 py-2.5">
         <div className="max-w-7xl mx-auto">
           {/* Desktop: pill buttons */}
           <div className="hidden md:flex flex-wrap gap-2 py-0.5">
@@ -278,7 +290,7 @@ export function CalendarView({ theatres, screenings, month }: Props) {
       </div>
 
       {/* Search */}
-      <div className="bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 px-4 py-2.5">
+      <div className="bg-white/60 dark:bg-zinc-900/60 backdrop-blur-sm border-b border-zinc-200/60 dark:border-zinc-800/60 px-4 py-2.5">
         <div className="max-w-7xl mx-auto">
           <input
             type="search"
@@ -305,7 +317,7 @@ export function CalendarView({ theatres, screenings, month }: Props) {
         </div>
 
         {/* Grid */}
-        <div className="grid grid-cols-7 gap-px bg-zinc-100 dark:bg-zinc-800 rounded-xl overflow-hidden border border-zinc-100 dark:border-zinc-800">
+        <div className="grid grid-cols-7 gap-px bg-zinc-200/60 dark:bg-zinc-700/60 rounded-xl overflow-hidden border border-zinc-200/60 dark:border-zinc-700/60">
           {weeks.flat().map((date, i) => {
             const key = toDateKey(date);
             const dayScreenings = byDate[key] ?? [];
@@ -321,8 +333,8 @@ export function CalendarView({ theatres, screenings, month }: Props) {
                 key={i}
                 className={`min-h-28 p-2 ${
                   inMonth
-                    ? "bg-white dark:bg-zinc-900"
-                    : "bg-zinc-50 dark:bg-zinc-950"
+                    ? "bg-white/55 dark:bg-zinc-900/55"
+                    : "bg-zinc-50/30 dark:bg-zinc-950/30"
                 } ${isExpanded ? "ring-2 ring-inset ring-zinc-900/15 dark:ring-zinc-100/20" : ""}`}
               >
                 {/* Date row — button when day has screenings */}
