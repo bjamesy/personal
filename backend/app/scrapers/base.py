@@ -17,12 +17,20 @@ class TheatreConfig:
 
 
 @dataclass
+class RawAttribute:
+    category: str
+    slug: str
+    label: str
+
+
+@dataclass
 class RawScreening:
     movie_title: str
     start_time: datetime
     end_time: datetime | None = None
     raw_source_ref: str | None = None
     raw_data: dict | None = None
+    attributes: list[RawAttribute] = field(default_factory=list)
 
     def __post_init__(self) -> None:
         if not self.movie_title or not self.movie_title.strip():

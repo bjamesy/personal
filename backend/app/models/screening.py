@@ -9,6 +9,7 @@ from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
+from app.models.screening_attribute import ScreeningAttribute, screening_attribute_map
 
 if TYPE_CHECKING:
     from app.models.movie import Movie
@@ -32,3 +33,7 @@ class Screening(Base):
 
     theatre: Mapped[Theatre] = relationship(back_populates="screenings")
     movie: Mapped[Movie] = relationship(back_populates="screenings")
+    attributes: Mapped[list[ScreeningAttribute]] = relationship(
+        secondary=screening_attribute_map,
+        lazy="raise",
+    )

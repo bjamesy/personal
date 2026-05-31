@@ -1,3 +1,4 @@
+import asyncio
 import hashlib
 import logging
 from datetime import datetime, timezone
@@ -9,6 +10,7 @@ from app.models.scraper_run import ScraperRunStatus
 from app.repositories.movie import MovieRepository
 from app.repositories.scraper_run import ScraperRunRepository
 from app.repositories.screening import ScreeningRepository
+from app.repositories.screening_attribute import ScreeningAttributeRepository
 from app.repositories.theatre import TheatreRepository
 from app.scrapers.base import ScraperResult
 
@@ -21,6 +23,7 @@ class IngestionService:
         self.theatre_repo = TheatreRepository(session)
         self.movie_repo = MovieRepository(session)
         self.screening_repo = ScreeningRepository(session)
+        self.attribute_repo = ScreeningAttributeRepository(session)
         self.scraper_run_repo = ScraperRunRepository(session)
 
     async def ingest(self, result: ScraperResult) -> None:
@@ -91,6 +94,29 @@ class IngestionService:
                     "ingest_screening_failed",
                     extra={"theatre": theatre.slug, "title": normalized},
                 )
+                continue
+
+            if raw.attributes:
+                try:
+                    screening = await self.screening_repo.get_by_idempotency_key(key)
+                    if screening is None:
+                        logger.warning(
+                            "ingest_attribute_sync_no_screening",
+                            extra={"theatre": theatre.slug, "title": normalized, "key": key},
+                        )
+                    else:
+                        attrs = await asyncio.gather(*[
+                            self.attribute_repo.get_or_create(a.category, a.slug, a.label)
+                            for a in raw.attributes
+                        ])
+                        await self.screening_repo.sync_attributes(
+                            screening.id, [a.id for a in attrs]
+                        )
+                except Exception:
+                    logger.exception(
+                        "ingest_attribute_sync_failed",
+                        extra={"theatre": theatre.slug, "title": normalized},
+                    )
 
         # Remove future screenings no longer advertised by this theatre.
         now = datetime.now(timezone.utc)

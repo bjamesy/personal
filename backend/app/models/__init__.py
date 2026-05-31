@@ -4,6 +4,7 @@ from app.models.restaurant_interest_event import RestaurantInterestEvent, Restau
 from app.models.restaurant_recommendation_click import RestaurantRecommendationClick
 from app.models.scraper_run import ScraperRun, ScraperRunStatus
 from app.models.screening import Screening
+from app.models.screening_attribute import ScreeningAttribute
 from app.models.theatre import Theatre
 
 __all__ = [
@@ -15,6 +16,7 @@ __all__ = [
     "ScraperRun",
     "ScraperRunStatus",
     "Screening",
+    "ScreeningAttribute",
     "Theatre",
     "TicketConfirmedStatus",
 ]

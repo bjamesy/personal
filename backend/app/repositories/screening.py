@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.models.screening import Screening
+from app.models.screening_attribute import screening_attribute_map
 
 
 class ScreeningRepository:
@@ -63,6 +64,24 @@ class ScreeningRepository:
         ).on_conflict_do_nothing(index_elements=["idempotency_key"])
         result = await self.session.execute(stmt)
         return result.rowcount
+
+    async def get_by_idempotency_key(self, key: str) -> Screening | None:
+        result = await self.session.execute(
+            select(Screening).where(Screening.idempotency_key == key)
+        )
+        return result.scalar_one_or_none()
+
+    async def sync_attributes(self, screening_id: uuid.UUID, attribute_ids: list[uuid.UUID]) -> None:
+        await self.session.execute(
+            delete(screening_attribute_map).where(
+                screening_attribute_map.c.screening_id == screening_id
+            )
+        )
+        if attribute_ids:
+            await self.session.execute(
+                screening_attribute_map.insert(),
+                [{"screening_id": screening_id, "attribute_id": aid} for aid in attribute_ids],
+            )
 
     async def delete_stale_future(
         self,
