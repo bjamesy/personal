@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import uuid
+from datetime import timedelta
 from urllib.parse import urljoin, urlparse
+from zoneinfo import ZoneInfo
 
 from fastapi import HTTPException
 from icalendar import Calendar, Event
@@ -11,6 +13,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.calendar_subscription import CalendarSubscription
 from app.repositories.calendar_subscription import CalendarSubscriptionRepository
 from app.repositories.screening import ScreeningRepository
+
+_TORONTO_TZ = ZoneInfo("America/Toronto")
+_DEFAULT_DURATION = timedelta(hours=2)
 
 
 def _ticket_url(raw_source_ref: str | None, theatre_source_url: str) -> str:
@@ -55,19 +60,26 @@ class CalendarSubscriptionService:
         cal.add("calscale", "GREGORIAN")
         cal.add("x-wr-calname", subscription.label or "Toronto Theatre Screenings")
         cal.add("x-wr-caldesc", "Upcoming film screenings")
+        cal.add("x-wr-timezone", "America/Toronto")
 
         for screening in screenings:
-            event = Event()
-            event.add("uid", str(screening.id))
-            event.add("summary", f"{screening.movie.title} @ {screening.theatre.name}")
-            event.add("dtstart", screening.start_time)
+            dtstart = screening.start_time.astimezone(_TORONTO_TZ)
             if screening.end_time:
-                event.add("dtend", screening.end_time)
+                dtend = screening.end_time.astimezone(_TORONTO_TZ)
+            else:
+                dtend = dtstart + _DEFAULT_DURATION
+
+            ticket_url = _ticket_url(screening.raw_source_ref, screening.theatre.source_url)
+
+            event = Event()
+            event.add("uid", f"screening:{screening.idempotency_key}")
+            event.add("summary", f"{screening.movie.title} @ {screening.theatre.name}")
+            event.add("dtstart", dtstart)
+            event.add("dtend", dtend)
             event.add("location", screening.theatre.name)
-            event.add(
-                "url",
-                _ticket_url(screening.raw_source_ref, screening.theatre.source_url),
-            )
+            event.add("url", ticket_url)
+            event.add("description", f"Tickets: {ticket_url}")
             cal.add_component(event)
 
+        cal.add_missing_timezones()
         return cal.to_ical()
