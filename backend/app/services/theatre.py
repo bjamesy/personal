@@ -1,3 +1,5 @@
+import uuid
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.theatre import Theatre
@@ -10,3 +12,6 @@ class TheatreService:
 
     async def get_all(self) -> list[Theatre]:
         return await self.repository.get_all()
+
+    async def get_by_id(self, theatre_id: uuid.UUID) -> Theatre | None:
+        return await self.repository.get_by_id(theatre_id)

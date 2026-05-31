@@ -6,9 +6,16 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_session
 from app.services.outbound_click import OutboundClickService
 from app.services.restaurant_interest_event import RestaurantInterestEventService
+from app.services.restaurant_recommendation_click import RestaurantRecommendationClickService
 from app.services.scraper_run import ScraperRunService
 from app.services.screening import ScreeningService
 from app.services.theatre import TheatreService
+
+
+async def get_restaurant_recommendation_click_service(
+    session: AsyncSession = Depends(get_session),
+) -> AsyncGenerator[RestaurantRecommendationClickService, None]:
+    yield RestaurantRecommendationClickService(session)
 
 
 async def get_restaurant_interest_event_service(

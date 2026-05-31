@@ -74,6 +74,45 @@ export async function recordOutboundClick(
 
 export type RestaurantInterestType = "before_movie" | "after_movie" | "browsing" | "declined";
 
+export interface RestaurantResult {
+  name: string;
+  rating: number | null;
+  address: string | null;
+  google_maps_url: string | null;
+}
+
+export async function fetchRestaurants(
+  theatreId: string,
+  intent: RestaurantInterestType
+): Promise<RestaurantResult[]> {
+  try {
+    const res = await fetch(
+      `${PUBLIC_API_URL}/theatres/${theatreId}/restaurants?intent=${intent}`,
+      { signal: AbortSignal.timeout(10000) }
+    );
+    if (!res.ok) return [];
+    return res.json();
+  } catch {
+    return [];
+  }
+}
+
+export async function recordRecommendationClick(
+  theatre_id: string,
+  restaurant_name: string,
+  interest_type: RestaurantInterestType
+): Promise<void> {
+  try {
+    await fetch(`${PUBLIC_API_URL}/restaurant-recommendation-clicks`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ theatre_id, restaurant_name, interest_type }),
+    });
+  } catch {
+    // best-effort
+  }
+}
+
 export async function recordRestaurantInterest(
   outbound_click_id: string,
   theatre_id: string,

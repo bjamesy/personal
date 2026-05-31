@@ -5,9 +5,10 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
-import type { RestaurantInterestType, ScreeningData, TheatreData, TicketConfirmedStatus } from "@/lib/api";
-import { patchOutboundClick, recordOutboundClick, recordRestaurantInterest } from "@/lib/api";
+import type { RestaurantInterestType, RestaurantResult, ScreeningData, TheatreData, TicketConfirmedStatus } from "@/lib/api";
+import { fetchRestaurants, patchOutboundClick, recordOutboundClick, recordRecommendationClick, recordRestaurantInterest } from "@/lib/api";
 import { RestaurantInterestModal } from "@/components/RestaurantInterestModal";
+import { RestaurantRecommendationsModal } from "@/components/RestaurantRecommendationsModal";
 import { TicketFollowUpModal } from "@/components/TicketFollowUpModal";
 import {
   buildCalendarWeeks,
@@ -66,6 +67,13 @@ export function CalendarView({ theatres, screenings, month }: Props) {
   const [searchTerm, setSearchTerm] = useState("");
   const [modalClickId, setModalClickId] = useState<string | null>(null);
   const [restaurantModal, setRestaurantModal] = useState<RestaurantModalState | null>(null);
+  const [restaurantLoading, setRestaurantLoading] = useState(false);
+  const [recommendationsModal, setRecommendationsModal] = useState<{
+    restaurants: RestaurantResult[];
+    theatreId: string;
+    theatreName: string;
+    interestType: RestaurantInterestType;
+  } | null>(null);
   const modalTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingTheatreRef = useRef<{ theatreId: string; theatreName: string } | null>(null);
 
@@ -161,13 +169,34 @@ export function CalendarView({ theatres, screenings, month }: Props) {
   async function handleRestaurantAnswer(answer: RestaurantInterestType) {
     const state = restaurantModal;
     setRestaurantModal(null);
-    if (state) {
-      await recordRestaurantInterest(state.clickId, state.theatreId, answer);
-    }
+    if (!state) return;
+
+    await recordRestaurantInterest(state.clickId, state.theatreId, answer);
+
+    if (answer === "declined") return;
+
+    setRestaurantLoading(true);
+    const restaurants = await fetchRestaurants(state.theatreId, answer);
+    setRestaurantLoading(false);
+    setRecommendationsModal({
+      restaurants,
+      theatreId: state.theatreId,
+      theatreName: state.theatreName,
+      interestType: answer,
+    });
   }
 
   function handleRestaurantDismiss() {
     setRestaurantModal(null);
+  }
+
+  async function handleRecommendationClick(restaurant: RestaurantResult) {
+    if (!recommendationsModal) return;
+    await recordRecommendationClick(
+      recommendationsModal.theatreId,
+      restaurant.name,
+      recommendationsModal.interestType
+    );
   }
 
   const allSelected = selectedSlugs.size === theatres.length;
@@ -496,6 +525,23 @@ export function CalendarView({ theatres, screenings, month }: Props) {
           theatreName={restaurantModal.theatreName}
           onAnswer={handleRestaurantAnswer}
           onDismiss={handleRestaurantDismiss}
+        />
+      )}
+      {restaurantLoading && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/40" aria-hidden="true" />
+          <div className="relative bg-white dark:bg-zinc-900 rounded-2xl px-8 py-6 shadow-xl border border-zinc-200 dark:border-zinc-700 text-sm text-zinc-600 dark:text-zinc-400">
+            Finding restaurants nearby…
+          </div>
+        </div>
+      )}
+      {recommendationsModal && (
+        <RestaurantRecommendationsModal
+          theatreName={recommendationsModal.theatreName}
+          restaurants={recommendationsModal.restaurants}
+          interestType={recommendationsModal.interestType}
+          onClickRestaurant={handleRecommendationClick}
+          onDismiss={() => setRecommendationsModal(null)}
         />
       )}
     </div>

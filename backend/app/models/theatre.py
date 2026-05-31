@@ -3,7 +3,7 @@ from __future__ import annotations
 import uuid
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Boolean, String
+from sqlalchemy import Boolean, Double, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
@@ -21,6 +21,8 @@ class Theatre(Base):
     slug: Mapped[str] = mapped_column(String, unique=True)
     source_url: Mapped[str] = mapped_column(String)
     is_cron_enabled: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true")
+    latitude: Mapped[float | None] = mapped_column(Double)
+    longitude: Mapped[float | None] = mapped_column(Double)
 
     screenings: Mapped[list[Screening]] = relationship(back_populates="theatre")
     scraper_runs: Mapped[list[ScraperRun]] = relationship(back_populates="theatre")
