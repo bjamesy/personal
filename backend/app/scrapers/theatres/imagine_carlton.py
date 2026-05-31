@@ -7,7 +7,7 @@ from zoneinfo import ZoneInfo
 
 from playwright.async_api import async_playwright
 
-from app.scrapers.base import BaseScraper, RawScreening, ScraperStrategy, TheatreConfig
+from app.scrapers.base import BaseScraper, RawScreening, ScraperStrategy, TheatreConfig, detect_format_attributes
 
 logger = logging.getLogger(__name__)
 
@@ -96,6 +96,7 @@ class ImagineCarItonScraper(BaseScraper):
                                 movie_title=title,
                                 start_time=start_time,
                                 raw_source_ref=raw_source_ref,
+                                attributes=detect_format_attributes(title),
                             ))
                         except (KeyError, ValueError):
                             continue

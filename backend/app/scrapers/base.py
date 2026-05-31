@@ -23,6 +23,21 @@ class RawAttribute:
     label: str
 
 
+_FORMAT_CHECKS = [
+    ("70mm", "70mm", "70mm Film"),
+    ("35mm", "35mm", "35mm Film"),
+]
+
+
+def detect_format_attributes(text: str) -> list[RawAttribute]:
+    lower = text.lower()
+    return [
+        RawAttribute(category="format", slug=slug, label=label)
+        for pattern, slug, label in _FORMAT_CHECKS
+        if pattern in lower
+    ]
+
+
 @dataclass
 class RawScreening:
     movie_title: str

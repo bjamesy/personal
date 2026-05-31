@@ -4,7 +4,7 @@ from zoneinfo import ZoneInfo
 
 from bs4 import BeautifulSoup
 
-from app.scrapers.base import RawScreening, TheatreConfig
+from app.scrapers.base import RawScreening, TheatreConfig, detect_format_attributes
 from app.scrapers.js_rendered import JSRenderedScraper
 
 logger = logging.getLogger(__name__)
@@ -45,6 +45,7 @@ class HotDocsScraper(JSRenderedScraper):
                     movie_title=title,
                     start_time=start_time,
                     raw_data={"agl_date": date_str},
+                    attributes=detect_format_attributes(title),
                 ))
             except Exception:
                 logger.exception("hotdocs_parse_error", extra={"showing": str(showing)[:100]})

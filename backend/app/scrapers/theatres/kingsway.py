@@ -4,7 +4,7 @@ from zoneinfo import ZoneInfo
 
 from bs4 import BeautifulSoup
 
-from app.scrapers.base import RawScreening, TheatreConfig
+from app.scrapers.base import RawScreening, TheatreConfig, detect_format_attributes
 from app.scrapers.static import StaticScraper
 
 TORONTO_TZ = ZoneInfo("America/Toronto")
@@ -62,6 +62,7 @@ class KingswayScraper(StaticScraper):
                             movie_title=title,
                             start_time=start_time,
                             raw_data={"alt": alt},
+                            attributes=detect_format_attributes(alt),
                         ))
 
         return screenings

@@ -7,7 +7,7 @@ from urllib.parse import urljoin
 
 from bs4 import BeautifulSoup
 
-from app.scrapers.base import RawScreening, TheatreConfig
+from app.scrapers.base import RawScreening, TheatreConfig, detect_format_attributes
 from app.scrapers.js_rendered import JSRenderedScraper
 
 logger = logging.getLogger(__name__)
@@ -68,6 +68,7 @@ class TOPSScraper(JSRenderedScraper):
                     movie_title=title,
                     start_time=start_time,
                     raw_source_ref=urljoin(self.config.source_url, href),
+                    attributes=detect_format_attributes(title),
                 ))
             except Exception:
                 logger.exception("tops_parse_error", extra={"block": str(block)[:100]})

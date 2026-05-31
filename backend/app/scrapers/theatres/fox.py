@@ -5,7 +5,7 @@ from zoneinfo import ZoneInfo
 from bs4 import BeautifulSoup
 from playwright.async_api import async_playwright
 
-from app.scrapers.base import BaseScraper, RawScreening, ScraperStrategy, TheatreConfig
+from app.scrapers.base import BaseScraper, RawScreening, ScraperStrategy, TheatreConfig, detect_format_attributes
 
 logger = logging.getLogger(__name__)
 
@@ -65,6 +65,7 @@ class FoxScraper(BaseScraper):
                         movie_title=title,
                         start_time=start_time,
                         raw_source_ref=event.get("href"),
+                        attributes=detect_format_attributes(title),
                     ))
                 except Exception:
                     logger.exception("fox_parse_error", extra={"date": date_str})

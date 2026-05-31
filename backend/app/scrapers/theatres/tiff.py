@@ -6,7 +6,7 @@ from zoneinfo import ZoneInfo
 from bs4 import BeautifulSoup
 from playwright.async_api import async_playwright
 
-from app.scrapers.base import BaseScraper, RawScreening, ScraperStrategy, TheatreConfig
+from app.scrapers.base import BaseScraper, RawScreening, ScraperStrategy, TheatreConfig, detect_format_attributes
 
 logger = logging.getLogger(__name__)
 
@@ -105,6 +105,7 @@ class TIFFScraper(BaseScraper):
                             movie_title=title,
                             start_time=start_time,
                             raw_source_ref=event_url,
+                            attributes=detect_format_attributes(title),
                         )
                     )
 

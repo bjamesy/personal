@@ -4,7 +4,7 @@ from zoneinfo import ZoneInfo
 
 import httpx
 
-from app.scrapers.base import BaseScraper, RawScreening, ScraperStrategy, TheatreConfig
+from app.scrapers.base import BaseScraper, RawScreening, ScraperStrategy, TheatreConfig, detect_format_attributes
 
 logger = logging.getLogger(__name__)
 
@@ -76,6 +76,7 @@ def _parse_response(data: list) -> list[RawScreening]:
                                 movie_title=title,
                                 start_time=start_time,
                                 raw_source_ref=deeplink or fallback_url,
+                                attributes=detect_format_attributes(title),
                             ))
                         except ValueError:
                             logger.warning("varsity_bad_datetime", extra={"start": start_str})
