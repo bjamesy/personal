@@ -237,7 +237,7 @@ export function CalendarView({ theatres, screenings, month }: Props) {
           <div className="flex items-center gap-1">
             <Link
               href={`?month=${prevMonth(month)}`}
-              className="px-2 py-1 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded text-lg leading-none"
+              className="px-2 py-1 text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded text-lg leading-none"
               aria-label="Previous month"
             >
               ‹
@@ -247,7 +247,7 @@ export function CalendarView({ theatres, screenings, month }: Props) {
             </span>
             <Link
               href={`?month=${nextMonth(month)}`}
-              className="px-2 py-1 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded text-lg leading-none"
+              className="px-2 py-1 text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded text-lg leading-none"
               aria-label="Next month"
             >
               ›
@@ -309,7 +309,7 @@ export function CalendarView({ theatres, screenings, month }: Props) {
           {DAY_LABELS.map((d) => (
             <div
               key={d}
-              className="py-1.5 text-center text-[11px] font-medium text-zinc-400 dark:text-zinc-600 uppercase tracking-wider"
+              className="py-1.5 text-center text-[11px] font-medium text-zinc-600 dark:text-zinc-500 uppercase tracking-wider"
             >
               {d}
             </div>
@@ -349,11 +349,11 @@ export function CalendarView({ theatres, screenings, month }: Props) {
                         {date.getDate()}
                       </span>
                     ) : (
-                      <span className={`text-xs font-medium ${inMonth ? "text-zinc-600 dark:text-zinc-400" : "text-zinc-300 dark:text-zinc-700"}`}>
+                      <span className={`text-xs font-medium ${inMonth ? "text-zinc-700 dark:text-zinc-300" : "text-zinc-500 dark:text-zinc-600"}`}>
                         {date.getDate()}
                       </span>
                     )}
-                    <span className={`text-[10px] text-zinc-400 dark:text-zinc-600 leading-none transition-transform duration-150 ${isExpanded ? "rotate-90" : ""}`}>
+                    <span className={`text-[10px] text-zinc-600 dark:text-zinc-500 leading-none transition-transform duration-150 ${isExpanded ? "rotate-90" : ""}`}>
                       ›
                     </span>
                   </button>
@@ -364,7 +364,7 @@ export function CalendarView({ theatres, screenings, month }: Props) {
                     </span>
                   </div>
                 ) : (
-                  <div className={`text-right text-xs font-medium mb-1 ${inMonth ? "text-zinc-600 dark:text-zinc-400" : "text-zinc-300 dark:text-zinc-700"}`}>
+                  <div className={`text-right text-xs font-medium mb-1 ${inMonth ? "text-zinc-700 dark:text-zinc-300" : "text-zinc-500 dark:text-zinc-600"}`}>
                     {date.getDate()}
                   </div>
                 )}
@@ -373,7 +373,7 @@ export function CalendarView({ theatres, screenings, month }: Props) {
                 <div className="space-y-0.5">
                   {(isExpanded ? groupByTheatre(dayScreenings) : groupByTheatre(visible)).map((group) => (
                     <div key={group.name} className="border-t border-zinc-50 dark:border-zinc-800 pt-0.5 mt-0.5 first:border-t-0 first:pt-0 first:mt-0">
-                      <div className="text-[9px] font-semibold uppercase tracking-widest text-zinc-400/80 dark:text-zinc-500">
+                      <div className="text-[9px] font-semibold uppercase tracking-widest text-zinc-600/80 dark:text-zinc-400">
                         {group.name}
                       </div>
                       {group.screenings.map((s) => (
@@ -384,7 +384,7 @@ export function CalendarView({ theatres, screenings, month }: Props) {
                           onClickScreening={handleScreeningClick}
                           title={`${displayTitle(s.movie.title)} — ${s.theatre.name} — ${formatTime(s.start_time)}`}
                         >
-                          <span className="text-zinc-400 dark:text-zinc-500 tabular-nums shrink-0">
+                          <span className="text-zinc-600 dark:text-zinc-400 tabular-nums shrink-0">
                             {formatTime(s.start_time)}
                           </span>
                           <span className="text-zinc-800 dark:text-zinc-200 truncate">
@@ -404,7 +404,7 @@ export function CalendarView({ theatres, screenings, month }: Props) {
         </div>
 
         {screenings.length === 0 && (
-          <p className="text-center text-zinc-400 dark:text-zinc-600 text-sm mt-8">
+          <p className="text-center text-zinc-600 dark:text-zinc-500 text-sm mt-8">
             No screenings found for this month.
           </p>
         )}
@@ -413,7 +413,7 @@ export function CalendarView({ theatres, screenings, month }: Props) {
       {/* Mobile: agenda list */}
       <main className="md:hidden max-w-7xl mx-auto px-4 py-4">
         {agendaDates.length === 0 ? (
-          <p className="text-center text-zinc-400 dark:text-zinc-600 text-sm mt-8">
+          <p className="text-center text-zinc-600 dark:text-zinc-500 text-sm mt-8">
             No screenings found for this month.
           </p>
         ) : (
@@ -435,17 +435,17 @@ export function CalendarView({ theatres, screenings, month }: Props) {
                     <span className={`text-sm font-semibold ${
                       key === today
                         ? "text-zinc-900 dark:text-zinc-100"
-                        : "text-zinc-500 dark:text-zinc-400"
+                        : "text-zinc-700 dark:text-zinc-300"
                     }`}>
                       {formatAgendaDate(key, today)}
                     </span>
                     <span className="flex items-center gap-1.5 shrink-0">
                       {!isExpanded && (
-                        <span className="text-xs text-zinc-400 dark:text-zinc-500">
+                        <span className="text-xs text-zinc-600 dark:text-zinc-400">
                           {count} screening{count !== 1 ? "s" : ""}
                         </span>
                       )}
-                      <span className={`text-zinc-400 dark:text-zinc-500 text-sm leading-none transition-transform duration-150 ${isExpanded ? "rotate-90" : ""}`}>
+                      <span className={`text-zinc-600 dark:text-zinc-400 text-sm leading-none transition-transform duration-150 ${isExpanded ? "rotate-90" : ""}`}>
                         ›
                       </span>
                     </span>
@@ -454,7 +454,7 @@ export function CalendarView({ theatres, screenings, month }: Props) {
                     <div className="space-y-3 pt-3">
                       {groupByTheatre(byDate[key]).map((group) => (
                         <div key={group.name}>
-                          <div className="text-[9px] font-semibold uppercase tracking-widest text-zinc-400/80 dark:text-zinc-500 mb-1">
+                          <div className="text-[9px] font-semibold uppercase tracking-widest text-zinc-600/80 dark:text-zinc-400 mb-1">
                             {group.name}
                           </div>
                           <div className="space-y-0.5">
@@ -465,7 +465,7 @@ export function CalendarView({ theatres, screenings, month }: Props) {
                                 activeClassName="flex gap-3 items-baseline py-1.5 px-2 -mx-2 rounded active:bg-zinc-100 dark:active:bg-zinc-800"
                                 onClickScreening={handleScreeningClick}
                               >
-                                <span className="text-xs tabular-nums text-zinc-400 dark:text-zinc-500 shrink-0 w-16">
+                                <span className="text-xs tabular-nums text-zinc-600 dark:text-zinc-400 shrink-0 w-16">
                                   {formatTime(s.start_time)}
                                 </span>
                                 <span className="text-sm text-zinc-800 dark:text-zinc-200">
@@ -610,7 +610,7 @@ function OverflowBadge({ groups, onClickScreening }: OverflowBadgeProps) {
         onBlur={scheduleHide}
         aria-expanded={popoverStyle !== null}
         aria-label={`Show ${totalCount} more screenings`}
-        className="text-xs text-zinc-400 dark:text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 hover:underline cursor-pointer focus:outline-none focus-visible:underline"
+        className="text-xs text-zinc-600 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300 hover:underline cursor-pointer focus:outline-none focus-visible:underline"
       >
         +{totalCount} more
       </button>
@@ -627,7 +627,7 @@ function OverflowBadge({ groups, onClickScreening }: OverflowBadgeProps) {
           >
             {groups.map((group) => (
               <div key={group.name} className="border-t border-zinc-100 dark:border-zinc-800 first:border-t-0">
-                <div className="px-3 pt-1 pb-0.5 text-[10px] uppercase tracking-wider text-zinc-400 dark:text-zinc-500 font-medium">
+                <div className="px-3 pt-1 pb-0.5 text-[10px] uppercase tracking-wider text-zinc-600 dark:text-zinc-400 font-medium">
                   {group.name}
                 </div>
                 {group.screenings.map((s) => (
@@ -639,7 +639,7 @@ function OverflowBadge({ groups, onClickScreening }: OverflowBadgeProps) {
                     onClickScreening={onClickScreening}
                     title={`${displayTitle(s.movie.title)} — ${s.theatre.name}`}
                   >
-                    <span className="shrink-0 tabular-nums text-zinc-400 dark:text-zinc-500">
+                    <span className="shrink-0 tabular-nums text-zinc-600 dark:text-zinc-400">
                       {formatTime(s.start_time)}
                     </span>
                     <span className="truncate text-zinc-700 dark:text-zinc-300">
@@ -701,7 +701,7 @@ function TheatreDropdown({ theatres, selectedSlugs, onToggle, onSelectAll }: The
         className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
           !allSelected
             ? "bg-zinc-900 dark:bg-white text-white dark:text-zinc-900"
-            : "bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400"
+            : "bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300"
         }`}
       >
         {label}
@@ -792,7 +792,7 @@ function FilterButton({
     return (
       <span
         title="Scraper temporarily unavailable"
-        className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-zinc-100 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-600 cursor-not-allowed"
+        className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-500 cursor-not-allowed"
       >
         <span className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />
         {label}
@@ -805,7 +805,7 @@ function FilterButton({
       className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
         active
           ? "bg-zinc-900 dark:bg-white text-white dark:text-zinc-900"
-          : "bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700"
+          : "bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700"
       }`}
     >
       {label}
@@ -827,7 +827,7 @@ function ThemeToggle() {
     <button
       onClick={toggle}
       aria-label="Toggle dark mode"
-      className="ml-1 p-1.5 rounded-lg text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+      className="ml-1 p-1.5 rounded-lg text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
     >
       {/* Moon: visible in light mode */}
       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="block dark:hidden">
