@@ -195,7 +195,9 @@ export function CalendarView({ theatres, screenings, month }: Props) {
     await recordRecommendationClick(
       recommendationsModal.theatreId,
       restaurant.name,
-      recommendationsModal.interestType
+      recommendationsModal.interestType,
+      restaurant.google_place_id,
+      restaurant.google_place_metadata
     );
   }
 

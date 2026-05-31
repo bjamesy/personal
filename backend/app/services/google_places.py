@@ -35,7 +35,8 @@ async def fetch_nearby_restaurants(
             PLACES_URL,
             json={
                 "textQuery": "dive bar cheap pub local tavern",
-                "maxResultCount": 20,
+                "maxResultCount": 5,
+                "rankPreference": "DISTANCE",
                 "locationBias": {
                     "circle": {
                         "center": {"latitude": latitude, "longitude": longitude},
@@ -46,7 +47,7 @@ async def fetch_nearby_restaurants(
             headers={
                 "Content-Type": "application/json",
                 "X-Goog-Api-Key": settings.google_places_api_key,
-                "X-Goog-FieldMask": "places.displayName,places.rating,places.formattedAddress,places.googleMapsUri",
+                "X-Goog-FieldMask": "places.displayName,places.rating,places.formattedAddress,places.googleMapsUri,places.id",
             },
             timeout=10.0,
         )
@@ -59,6 +60,8 @@ async def fetch_nearby_restaurants(
             "rating": p.get("rating"),
             "address": p.get("formattedAddress"),
             "google_maps_url": p.get("googleMapsUri"),
+            "google_place_id": p.get("id"),
+            "google_place_metadata": p,
         }
         for p in data.get("places", [])
         if "displayName" in p

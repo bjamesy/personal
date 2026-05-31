@@ -12,4 +12,4 @@ async def create_restaurant_recommendation_click(
     body: RestaurantRecommendationClickCreate,
     service: RestaurantRecommendationClickService = Depends(get_restaurant_recommendation_click_service),
 ) -> None:
-    await service.record(body.theatre_id, body.restaurant_name, body.interest_type)
+    await service.record(body.theatre_id, body.google_restaurant_name, body.interest_type, body.google_place_id, body.google_place_metadata)
