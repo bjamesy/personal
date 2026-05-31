@@ -13,6 +13,14 @@ class MovieResponse(BaseModel):
     title: str
 
 
+class ScreeningAttributeResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    slug: str
+    label: str
+    category: str
+
+
 class ScreeningResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -23,3 +31,4 @@ class ScreeningResponse(BaseModel):
     end_time: datetime | None
     raw_source_ref: str | None
     created_at: datetime
+    attributes: list[ScreeningAttributeResponse]

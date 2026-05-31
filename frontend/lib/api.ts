@@ -21,6 +21,12 @@ export interface MovieData {
   title: string;
 }
 
+export interface ScreeningAttributeData {
+  slug: string;
+  label: string;
+  category: string;
+}
+
 export interface ScreeningData {
   id: string;
   theatre: TheatreData;
@@ -29,6 +35,7 @@ export interface ScreeningData {
   end_time: string | null;
   raw_source_ref: string | null;
   created_at: string;
+  attributes: ScreeningAttributeData[];
 }
 
 export async function fetchTheatres(): Promise<TheatreData[]> {

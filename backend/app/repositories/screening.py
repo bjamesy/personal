@@ -25,7 +25,11 @@ class ScreeningRepository:
 
         result = await self.session.execute(
             select(Screening)
-            .options(selectinload(Screening.theatre), selectinload(Screening.movie))
+            .options(
+                selectinload(Screening.theatre),
+                selectinload(Screening.movie),
+                selectinload(Screening.attributes),
+            )
             .where(Screening.start_time >= start)
             .where(Screening.start_time < end)
             .order_by(Screening.start_time)
@@ -36,7 +40,11 @@ class ScreeningRepository:
         now = datetime.now(timezone.utc)
         result = await self.session.execute(
             select(Screening)
-            .options(selectinload(Screening.theatre), selectinload(Screening.movie))
+            .options(
+                selectinload(Screening.theatre),
+                selectinload(Screening.movie),
+                selectinload(Screening.attributes),
+            )
             .where(Screening.start_time >= now)
             .order_by(Screening.start_time)
         )

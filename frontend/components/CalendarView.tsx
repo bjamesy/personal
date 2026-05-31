@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
-import type { RestaurantInterestType, RestaurantResult, ScreeningData, TheatreData, TicketConfirmedStatus } from "@/lib/api";
+import type { RestaurantInterestType, RestaurantResult, ScreeningAttributeData, ScreeningData, TheatreData, TicketConfirmedStatus } from "@/lib/api";
 import { fetchRestaurants, patchOutboundClick, recordOutboundClick, recordRecommendationClick, recordRestaurantInterest } from "@/lib/api";
 import { CalendarSubscribeModal } from "@/components/CalendarSubscribeModal";
 import { RestaurantInterestModal } from "@/components/RestaurantInterestModal";
@@ -66,6 +66,7 @@ export function CalendarView({ theatres, screenings, month }: Props) {
   const [selectedSlugs, setSelectedSlugs] = useState<Set<string>>(
     () => new Set(theatres.map((t) => t.slug))
   );
+  const [selectedAttributeSlugs, setSelectedAttributeSlugs] = useState<Set<string>>(new Set());
   const [inputValue, setInputValue] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [modalClickId, setModalClickId] = useState<string | null>(null);
@@ -226,9 +227,28 @@ export function CalendarView({ theatres, screenings, month }: Props) {
     });
   }
 
+  function toggleAttributeSlug(slug: string) {
+    setSelectedAttributeSlugs((prev) => {
+      const next = new Set(prev);
+      next.has(slug) ? next.delete(slug) : next.add(slug);
+      return next;
+    });
+  }
+
+  // Derive available attributes grouped by category from the full screenings list.
+  const attributesByCategory = screenings.reduce<Map<string, ScreeningAttributeData[]>>((acc, s) => {
+    for (const attr of s.attributes) {
+      if (!acc.has(attr.category)) acc.set(attr.category, []);
+      const existing = acc.get(attr.category)!;
+      if (!existing.some((a) => a.slug === attr.slug)) existing.push(attr);
+    }
+    return acc;
+  }, new Map());
+
   const filtered = screenings
     .filter((s) => allSelected || selectedSlugs.has(s.theatre.slug))
-    .filter((s) => !searchTerm || displayTitle(s.movie.title).toLowerCase().includes(searchTerm.toLowerCase()));
+    .filter((s) => !searchTerm || displayTitle(s.movie.title).toLowerCase().includes(searchTerm.toLowerCase()))
+    .filter((s) => selectedAttributeSlugs.size === 0 || s.attributes.some((a) => selectedAttributeSlugs.has(a.slug)));
 
   const byDate = filtered.reduce<Record<string, ScreeningData[]>>((acc, s) => {
     const key = screeningDateKey(s.start_time);
@@ -348,6 +368,29 @@ export function CalendarView({ theatres, screenings, month }: Props) {
           </div>
         </div>
       </div>
+
+      {/* Attribute filters */}
+      {attributesByCategory.size > 0 && (
+        <div className="bg-white/60 dark:bg-zinc-900/60 backdrop-blur-sm border-b border-zinc-200/60 dark:border-zinc-800/60 px-4 py-2.5">
+          <div className="max-w-7xl mx-auto flex flex-wrap items-center gap-x-4 gap-y-2">
+            {[...attributesByCategory.entries()].map(([category, attrs]) => (
+              <div key={category} className="flex items-center gap-1.5">
+                <span className="text-[10px] font-semibold uppercase tracking-widest text-zinc-500 dark:text-zinc-400 shrink-0">
+                  {category}
+                </span>
+                {attrs.map((attr) => (
+                  <FilterButton
+                    key={attr.slug}
+                    label={attr.label}
+                    active={selectedAttributeSlugs.has(attr.slug)}
+                    onClick={() => toggleAttributeSlug(attr.slug)}
+                  />
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Search */}
       <div className="bg-white/60 dark:bg-zinc-900/60 backdrop-blur-sm border-b border-zinc-200/60 dark:border-zinc-800/60 px-4 py-2.5">
