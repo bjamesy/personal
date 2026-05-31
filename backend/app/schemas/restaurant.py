@@ -10,8 +10,8 @@ class RestaurantResult(BaseModel):
     rating: float | None
     address: str | None
     google_maps_url: str | None
-    google_place_id: str | None
-    google_place_metadata: dict | None
+    place_id: str | None
+    place_metadata: dict | None
 
 
 class RestaurantRecommendationClickCreate(BaseModel):

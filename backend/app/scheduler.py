@@ -64,10 +64,7 @@ async def _auto_disable_failing_scrapers(
             continue
 
         def _is_failed(run) -> bool:
-            return (
-                run.status == ScraperRunStatus.failure
-                or (run.screenings_scraped is not None and run.screenings_scraped == 0)
-            )
+            return run.status == ScraperRunStatus.failure
 
         if all(_is_failed(r) for r in recent):
             await theatre_repo.disable(result.theatre_slug)

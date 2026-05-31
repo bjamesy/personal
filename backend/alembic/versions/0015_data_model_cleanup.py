@@ -68,6 +68,9 @@ def downgrade() -> None:
     op.alter_column("scraper_runs", "screenings_inserted", new_column_name="items_extracted")
     op.alter_column("scraper_runs", "screenings_scraped", new_column_name="screenings_found")
 
+    # NOTE: originals were NOT NULL but data has been dropped so we can only
+    # restore the columns as nullable — the NOT NULL constraint cannot be
+    # recovered without a data backfill that is no longer possible.
     op.add_column("restaurant_interest_events", sa.Column("theatre_id", postgresql.UUID(as_uuid=True), nullable=True))
     op.create_foreign_key("restaurant_interest_events_theatre_id_fkey", "restaurant_interest_events", "theatres", ["theatre_id"], ["id"])
 
