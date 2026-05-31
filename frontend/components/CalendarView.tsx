@@ -320,7 +320,7 @@ export function CalendarView({ theatres, screenings, month }: Props) {
       {/* Theatre filter */}
       <div className="bg-white/60 dark:bg-zinc-900/60 backdrop-blur-sm border-b border-zinc-200/60 dark:border-zinc-800/60 px-4 py-2.5">
         <div className="max-w-7xl mx-auto">
-          {/* Desktop: pill buttons + subscribe */}
+          {/* Desktop: pill buttons */}
           <div className="hidden md:flex flex-wrap items-center gap-2 py-0.5">
             <FilterButton
               label="All"
@@ -336,18 +336,8 @@ export function CalendarView({ theatres, screenings, month }: Props) {
                 onClick={() => toggleSlug(t.slug)}
               />
             ))}
-            <button
-              onClick={() => setCalendarSubscribeOpen(true)}
-              className="ml-auto flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
-              aria-label="Subscribe to Calendar"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="w-3.5 h-3.5 shrink-0" aria-hidden="true">
-                <path fillRule="evenodd" d="M4 1.75a.75.75 0 0 1 1.5 0V3h5V1.75a.75.75 0 0 1 1.5 0V3h.25A2.75 2.75 0 0 1 15 5.75v7.5A2.75 2.75 0 0 1 12.25 16H3.75A2.75 2.75 0 0 1 1 13.25v-7.5A2.75 2.75 0 0 1 3.75 3H4V1.75ZM3.75 4.5c-.69 0-1.25.56-1.25 1.25V6.5h11V5.75c0-.69-.56-1.25-1.25-1.25H3.75ZM2.5 8v5.25c0 .69.56 1.25 1.25 1.25h8.5c.69 0 1.25-.56 1.25-1.25V8h-11Z" clipRule="evenodd" />
-              </svg>
-              Subscribe
-            </button>
           </div>
-          {/* Mobile: dropdown + subscribe */}
+          {/* Mobile: dropdown */}
           <div className="md:hidden flex items-center gap-2">
             <TheatreDropdown
               theatres={theatres}
@@ -355,16 +345,6 @@ export function CalendarView({ theatres, screenings, month }: Props) {
               onToggle={toggleSlug}
               onSelectAll={selectAll}
             />
-            <button
-              onClick={() => setCalendarSubscribeOpen(true)}
-              className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors shrink-0"
-              aria-label="Subscribe to Calendar"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="w-3.5 h-3.5 shrink-0" aria-hidden="true">
-                <path fillRule="evenodd" d="M4 1.75a.75.75 0 0 1 1.5 0V3h5V1.75a.75.75 0 0 1 1.5 0V3h.25A2.75 2.75 0 0 1 15 5.75v7.5A2.75 2.75 0 0 1 12.25 16H3.75A2.75 2.75 0 0 1 1 13.25v-7.5A2.75 2.75 0 0 1 3.75 3H4V1.75ZM3.75 4.5c-.69 0-1.25.56-1.25 1.25V6.5h11V5.75c0-.69-.56-1.25-1.25-1.25H3.75ZM2.5 8v5.25c0 .69.56 1.25 1.25 1.25h8.5c.69 0 1.25-.56 1.25-1.25V8h-11Z" clipRule="evenodd" />
-              </svg>
-              Subscribe
-            </button>
           </div>
         </div>
       </div>
@@ -402,6 +382,43 @@ export function CalendarView({ theatres, screenings, month }: Props) {
             placeholder="Search screenings…"
             className="w-full sm:w-72 px-3 py-1.5 text-sm rounded-full border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-400 focus:border-transparent"
           />
+        </div>
+      </div>
+
+      {/* Calendar subscription CTA */}
+      <div className="max-w-7xl mx-auto px-4 pt-4">
+        {/* Desktop: card */}
+        <div className="hidden md:flex items-center justify-between gap-6 bg-white/75 dark:bg-zinc-900/75 backdrop-blur-sm border border-zinc-200/70 dark:border-zinc-800/70 rounded-xl px-6 py-5 shadow-sm mb-2">
+          <div className="flex items-start gap-4">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="w-5 h-5 text-zinc-400 dark:text-zinc-500 shrink-0 mt-0.5" aria-hidden="true">
+              <path fillRule="evenodd" d="M4 1.75a.75.75 0 0 1 1.5 0V3h5V1.75a.75.75 0 0 1 1.5 0V3h.25A2.75 2.75 0 0 1 15 5.75v7.5A2.75 2.75 0 0 1 12.25 16H3.75A2.75 2.75 0 0 1 1 13.25v-7.5A2.75 2.75 0 0 1 3.75 3H4V1.75ZM3.75 4.5c-.69 0-1.25.56-1.25 1.25V6.5h11V5.75c0-.69-.56-1.25-1.25-1.25H3.75ZM2.5 8v5.25c0 .69.56 1.25 1.25 1.25h8.5c.69 0 1.25-.56 1.25-1.25V8h-11Z" clipRule="evenodd" />
+            </svg>
+            <div>
+              <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Never miss a screening</p>
+              <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-0.5">Get new screenings from your selected theatres automatically in Google Calendar, Apple Calendar, or Outlook.</p>
+            </div>
+          </div>
+          <button
+            onClick={() => setCalendarSubscribeOpen(true)}
+            className="shrink-0 px-4 py-2 rounded-lg bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-sm font-medium hover:bg-zinc-700 dark:hover:bg-zinc-200 transition-colors"
+          >
+            Get Screenings in My Calendar
+          </button>
+        </div>
+        {/* Mobile: compact strip */}
+        <div className="md:hidden flex flex-wrap items-center justify-between gap-2 bg-white/75 dark:bg-zinc-900/75 backdrop-blur-sm border border-zinc-200/70 dark:border-zinc-800/70 rounded-xl px-4 py-3 shadow-sm mb-2">
+          <div className="flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="w-4 h-4 text-zinc-400 dark:text-zinc-500 shrink-0" aria-hidden="true">
+              <path fillRule="evenodd" d="M4 1.75a.75.75 0 0 1 1.5 0V3h5V1.75a.75.75 0 0 1 1.5 0V3h.25A2.75 2.75 0 0 1 15 5.75v7.5A2.75 2.75 0 0 1 12.25 16H3.75A2.75 2.75 0 0 1 1 13.25v-7.5A2.75 2.75 0 0 1 3.75 3H4V1.75ZM3.75 4.5c-.69 0-1.25.56-1.25 1.25V6.5h11V5.75c0-.69-.56-1.25-1.25-1.25H3.75ZM2.5 8v5.25c0 .69.56 1.25 1.25 1.25h8.5c.69 0 1.25-.56 1.25-1.25V8h-11Z" clipRule="evenodd" />
+            </svg>
+            <span className="text-sm font-medium text-zinc-800 dark:text-zinc-200">Never miss a screening</span>
+          </div>
+          <button
+            onClick={() => setCalendarSubscribeOpen(true)}
+            className="px-3 py-1.5 rounded-full bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-xs font-medium hover:bg-zinc-700 dark:hover:bg-zinc-200 transition-colors"
+          >
+            Get Screenings in My Calendar
+          </button>
         </div>
       </div>
 
