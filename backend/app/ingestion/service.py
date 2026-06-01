@@ -71,7 +71,7 @@ class IngestionService:
                 )
                 continue
 
-            movie = await self.movie_repo.get_or_create(normalized)
+            movie = await self.movie_repo.get_or_create(title=raw.movie_title, slug=normalized)
 
             key = hashlib.sha256(
                 f"{theatre.slug}{normalized}{raw.start_time.isoformat()}".encode()

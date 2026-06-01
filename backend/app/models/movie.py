@@ -16,6 +16,7 @@ class Movie(Base):
     __tablename__ = "movies"
 
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
-    title: Mapped[str] = mapped_column(String, unique=True)
+    title: Mapped[str] = mapped_column(String)
+    slug: Mapped[str] = mapped_column(String, unique=True)
 
     screenings: Mapped[list[Screening]] = relationship(back_populates="movie")
