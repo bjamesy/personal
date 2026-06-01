@@ -24,6 +24,8 @@ class CalendarSubscription(Base):
     )
     label: Mapped[str | None] = mapped_column(Text)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true")
+    fetch_count: Mapped[int] = mapped_column(default=0, server_default="0")
+    last_fetched_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
     subscription_theatres: Mapped[list[CalendarSubscriptionTheatre]] = relationship(
         back_populates="subscription", cascade="all, delete-orphan"

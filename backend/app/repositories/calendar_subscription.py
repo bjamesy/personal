@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import secrets
 import uuid
+from datetime import datetime, timezone
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -46,3 +47,8 @@ class CalendarSubscriptionRepository:
             .where(CalendarSubscription.is_active.is_(True))
         )
         return result.scalar_one_or_none()
+
+    async def record_fetch(self, subscription: CalendarSubscription) -> None:
+        subscription.fetch_count += 1
+        subscription.last_fetched_at = datetime.now(timezone.utc)
+        await self.session.flush()

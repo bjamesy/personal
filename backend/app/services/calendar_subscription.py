@@ -52,6 +52,9 @@ class CalendarSubscriptionService:
         if not subscription:
             return None
 
+        await self.subscription_repo.record_fetch(subscription)
+        await self.subscription_repo.session.commit()
+
         theatre_ids = [st.theatre_id for st in subscription.subscription_theatres]
         screenings = await self.screening_repo.get_upcoming_for_theatres(theatre_ids)
 
