@@ -46,7 +46,7 @@ export function TicketFollowUpModal({ movieTitle, onAnswer, onDismiss }: Props) 
         >
           Did you end up getting tickets
           {movieTitle ? (
-            <> for <span className="italic">{movieTitle}</span>?</>
+            <> for <span className="italic">{movieTitle.replace(/\s*\([^)]*\)/g, "").trim()}</span>?</>
           ) : "?"}
         </p>
 
