@@ -10,19 +10,11 @@ class MovieRepository:
         self.session = session
 
     async def get_or_create(self, title: str, slug: str) -> Movie:
-        # Single round-trip, race-safe: insert and return the row, or fetch if it existed.
         stmt = (
             pg_insert(Movie)
             .values(title=title, slug=slug)
-            .on_conflict_do_nothing(index_elements=["slug"])
+            .on_conflict_do_update(index_elements=["slug"], set_={"title": title})
             .returning(Movie)
         )
         result = await self.session.execute(stmt)
-        movie = result.scalar_one_or_none()
-        if movie is None:
-            # Conflict: row already existed — fetch it.
-            result = await self.session.execute(
-                select(Movie).where(Movie.slug == slug)
-            )
-            movie = result.scalar_one()
-        return movie
+        return result.scalar_one()
