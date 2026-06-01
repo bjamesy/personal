@@ -5,6 +5,14 @@ import { createPortal } from "react-dom";
 import type { TheatreData } from "@/lib/api";
 import { createCalendarSubscription } from "@/lib/api";
 
+function toWebcalUrl(url: string): string {
+  return url.replace(/^https?:\/\//, "webcal://");
+}
+
+function isMobileDevice(): boolean {
+  return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+}
+
 interface Props {
   theatres: TheatreData[];
   initialSlugs: Set<string>;
@@ -108,11 +116,33 @@ export function CalendarSubscribeModal({ theatres, initialSlugs, onClose }: Prop
         </div>
 
         {feedUrl ? (
-          /* Step 2: show the URL */
+          /* Step 2: open in calendar or copy URL */
           <div className="px-5 py-5 space-y-4">
-            <p className="text-xs text-zinc-500 dark:text-zinc-400">
-              Add this URL to Apple Calendar, Google Calendar, or any app that supports calendar subscriptions. It updates automatically.
-            </p>
+            {isMobileDevice() ? (
+              <>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                  Tap below to open in your calendar app. It will ask you to confirm the subscription.
+                </p>
+                <a
+                  href={toWebcalUrl(feedUrl)}
+                  className="flex items-center justify-center w-full py-2.5 rounded-xl text-sm font-medium bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 hover:bg-zinc-700 dark:hover:bg-zinc-200 transition-colors"
+                >
+                  Add to Calendar
+                </a>
+              </>
+            ) : (
+              <>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                  Open in a calendar app, or copy the URL to add it manually.
+                </p>
+                <a
+                  href={toWebcalUrl(feedUrl)}
+                  className="flex items-center justify-center w-full py-2.5 rounded-xl text-sm font-medium bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 hover:bg-zinc-700 dark:hover:bg-zinc-200 transition-colors"
+                >
+                  Open in Calendar
+                </a>
+              </>
+            )}
             <div className="flex gap-2">
               <input
                 ref={urlInputRef}
@@ -123,7 +153,7 @@ export function CalendarSubscribeModal({ theatres, initialSlugs, onClose }: Prop
               />
               <button
                 onClick={handleCopy}
-                className="shrink-0 px-3 py-2 rounded-lg text-xs font-medium bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 hover:bg-zinc-700 dark:hover:bg-zinc-200 transition-colors"
+                className="shrink-0 px-3 py-2 rounded-lg text-xs font-medium border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
               >
                 {copied ? "Copied" : "Copy"}
               </button>
