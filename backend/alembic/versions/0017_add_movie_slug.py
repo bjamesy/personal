@@ -8,6 +8,11 @@ Create Date: 2026-06-01
 from alembic import op
 import sqlalchemy as sa
 
+revision: str = "0017"
+down_revision: str = "0016"
+branch_labels: str | None = None
+depends_on: str | None = None
+
 
 def upgrade() -> None:
     # Add slug, backfill from title (which currently holds the normalized form), then constrain.
