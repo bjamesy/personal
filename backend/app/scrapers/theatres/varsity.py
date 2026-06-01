@@ -19,6 +19,7 @@ _HEADERS = {
     "ocp-apim-subscription-key": "dcdac5601d864addbc2675a2e96cb1f8",
     "referer": "https://www.cineplex.com/",
     "accept-language": "en",
+    "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
 }
 
 CONFIG = TheatreConfig(
