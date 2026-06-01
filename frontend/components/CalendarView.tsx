@@ -39,6 +39,7 @@ interface PendingClick {
   screeningId: string;
   theatreId: string;
   theatreName: string;
+  movieTitle?: string;
   shownAt?: number;
 }
 
@@ -82,7 +83,7 @@ export function CalendarView({ theatres, screenings, month }: Props) {
   } | null>(null);
   const [calendarSubscribeOpen, setCalendarSubscribeOpen] = useState(false);
   const modalTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const pendingTheatreRef = useRef<{ screeningId: string; theatreId: string; theatreName: string } | null>(null);
+  const pendingTheatreRef = useRef<{ screeningId: string; theatreId: string; theatreName: string; movieTitle?: string } | null>(null);
 
   useEffect(() => {
     const id = setTimeout(() => setSearchTerm(inputValue.trim()), 250);
@@ -112,7 +113,7 @@ export function CalendarView({ theatres, screenings, month }: Props) {
           localStorage.setItem(PENDING_CLICK_KEY, JSON.stringify(updated));
           setModalClickId(pending.id!);
           // Stash theatre info in a ref so handleModalAnswer can access it
-          pendingTheatreRef.current = { screeningId: pending.screeningId, theatreId: pending.theatreId, theatreName: pending.theatreName };
+          pendingTheatreRef.current = { screeningId: pending.screeningId, theatreId: pending.theatreId, theatreName: pending.theatreName, movieTitle: pending.movieTitle };
         }, 5000);
       } catch {
         localStorage.removeItem(PENDING_CLICK_KEY);
@@ -133,14 +134,14 @@ export function CalendarView({ theatres, screenings, month }: Props) {
     // Write a placeholder immediately so visibilitychange fires before the
     // API responds still has something to detect.
     try {
-      const placeholder: PendingClick = { id: null, screeningId: s.id, theatreId: s.theatre.id, theatreName: s.theatre.name };
+      const placeholder: PendingClick = { id: null, screeningId: s.id, theatreId: s.theatre.id, theatreName: s.theatre.name, movieTitle: displayTitle(s.movie.title) };
       localStorage.setItem(PENDING_CLICK_KEY, JSON.stringify(placeholder));
     } catch {}
 
     const click = await recordOutboundClick(s.id);
     if (click) {
       try {
-        const pending: PendingClick = { id: click.id, screeningId: s.id, theatreId: s.theatre.id, theatreName: s.theatre.name };
+        const pending: PendingClick = { id: click.id, screeningId: s.id, theatreId: s.theatre.id, theatreName: s.theatre.name, movieTitle: displayTitle(s.movie.title) };
         localStorage.setItem(PENDING_CLICK_KEY, JSON.stringify(pending));
       } catch {}
     } else {
@@ -620,6 +621,7 @@ export function CalendarView({ theatres, screenings, month }: Props) {
 
       {modalClickId && (
         <TicketFollowUpModal
+          movieTitle={pendingTheatreRef.current?.movieTitle}
           onAnswer={handleModalAnswer}
           onDismiss={handleModalDismiss}
         />

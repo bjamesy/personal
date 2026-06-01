@@ -5,11 +5,12 @@ import { createPortal } from "react-dom";
 import type { TicketConfirmedStatus } from "@/lib/api";
 
 interface Props {
+  movieTitle?: string;
   onAnswer: (answer: TicketConfirmedStatus) => void;
   onDismiss: () => void;
 }
 
-export function TicketFollowUpModal({ onAnswer, onDismiss }: Props) {
+export function TicketFollowUpModal({ movieTitle, onAnswer, onDismiss }: Props) {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -43,7 +44,10 @@ export function TicketFollowUpModal({ onAnswer, onDismiss }: Props) {
           id="ticket-modal-title"
           className="text-sm font-medium text-zinc-900 dark:text-zinc-100 text-center"
         >
-          Did you end up getting tickets?
+          Did you end up getting tickets
+          {movieTitle ? (
+            <> for <span className="italic">{movieTitle}</span>?</>
+          ) : "?"}
         </p>
 
         <div className="flex flex-col gap-2">
