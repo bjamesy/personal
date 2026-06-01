@@ -605,6 +605,19 @@ export function CalendarView({ theatres, screenings, month }: Props) {
         )}
       </main>
 
+      {/* Footer */}
+      <footer className="bg-white/60 dark:bg-zinc-900/60 backdrop-blur-sm border-t border-zinc-200/60 dark:border-zinc-800/60 px-4 py-4 mt-4">
+        <div className="max-w-7xl mx-auto text-center text-xs text-zinc-500 dark:text-zinc-400">
+          Questions or suggestions?{" "}
+          <a
+            href="mailto:jameswballanger@gmail.com"
+            className="underline underline-offset-2 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors"
+          >
+            Get in touch
+          </a>
+        </div>
+      </footer>
+
       {modalClickId && (
         <TicketFollowUpModal
           onAnswer={handleModalAnswer}
