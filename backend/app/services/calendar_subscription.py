@@ -66,7 +66,9 @@ class CalendarSubscriptionService:
         await self.subscription_repo.record_fetch(subscription)
         await self.subscription_repo.session.commit()
 
-        if if_none_match and if_none_match == etag:
+        # Strip W/ weak-validator prefix before comparing (RFC 7232)
+        normalised = if_none_match[2:] if if_none_match and if_none_match.startswith("W/") else if_none_match
+        if normalised and normalised == etag:
             return etag, None
 
         screenings = await self.screening_repo.get_upcoming_for_theatres(theatre_ids)

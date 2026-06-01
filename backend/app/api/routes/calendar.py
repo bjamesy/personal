@@ -39,12 +39,13 @@ async def get_calendar_feed(
     if etag is None:
         raise HTTPException(status_code=404, detail="Calendar feed not found")
     if ics is None:
-        return Response(status_code=304, headers={"ETag": etag})
+        return Response(status_code=304, headers={"ETag": etag, "Cache-Control": "no-cache"})
     return Response(
         content=ics,
         media_type="text/calendar; charset=utf-8",
         headers={
             "Content-Disposition": "inline; filename=screenings.ics",
             "ETag": etag,
+            "Cache-Control": "no-cache",
         },
     )
