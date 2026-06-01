@@ -37,6 +37,7 @@ class VarsityScraper(BaseScraper):
         today = datetime.now(TORONTO_TZ).date()
         screenings: list[RawScreening] = []
 
+        error_count = 0
         async with httpx.AsyncClient(headers=_HEADERS, timeout=15.0) as client:
             for i in range(_LOOKAHEAD_DAYS):
                 d = today + timedelta(days=i)
@@ -50,7 +51,11 @@ class VarsityScraper(BaseScraper):
                     if r.content:
                         screenings.extend(_parse_response(r.json()))
                 except Exception:
+                    error_count += 1
                     logger.exception("varsity_fetch_error", extra={"date": d.isoformat()})
+
+        if error_count == _LOOKAHEAD_DAYS:
+            raise RuntimeError(f"All {_LOOKAHEAD_DAYS} day fetches failed")
 
         return screenings
 
