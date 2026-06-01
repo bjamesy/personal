@@ -319,7 +319,7 @@ export function CalendarView({ theatres, screenings, month }: Props) {
       </header>
 
       {/* Theatre filter */}
-      <div className="bg-white/60 dark:bg-zinc-900/60 backdrop-blur-sm border-b border-zinc-200/60 dark:border-zinc-800/60 px-4 py-2.5">
+      <div className="relative z-10 bg-white/60 dark:bg-zinc-900/60 backdrop-blur-sm border-b border-zinc-200/60 dark:border-zinc-800/60 px-4 py-2.5">
         <div className="max-w-7xl mx-auto">
           {/* Desktop: pill buttons */}
           <div className="hidden md:flex flex-wrap items-center gap-2 py-0.5">
