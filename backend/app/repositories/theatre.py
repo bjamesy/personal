@@ -35,6 +35,15 @@ class TheatreRepository:
             theatre.is_cron_enabled = False
             await self.session.flush()
 
+    async def enable(self, slug: str) -> None:
+        result = await self.session.execute(
+            select(Theatre).where(Theatre.slug == slug)
+        )
+        theatre = result.scalar_one_or_none()
+        if theatre:
+            theatre.is_cron_enabled = True
+            await self.session.flush()
+
     async def create(
         self,
         name: str,

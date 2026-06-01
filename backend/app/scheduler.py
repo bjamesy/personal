@@ -32,21 +32,16 @@ _CONSECUTIVE_FAILURE_THRESHOLD = 3
 
 async def run_pipeline() -> None:
     logger.info("pipeline_start")
-    async with async_session_factory() as session:
-        enabled_slugs = {
-            t.slug for t in await TheatreRepository(session).get_all()
-            if t.is_cron_enabled
-        }
-    scrapers = [s for s in get_all_scrapers() if s.config.slug in enabled_slugs]
-    logger.info("pipeline_scrapers", extra={"enabled": len(scrapers), "total": len(get_all_scrapers())})
+    scrapers = get_all_scrapers()
+    logger.info("pipeline_scrapers", extra={"total": len(scrapers)})
     results = await run_all_scrapers(scrapers)
     async with async_session_factory() as session:
         await ingest_all(results, session)
-        await _auto_disable_failing_scrapers(results, session)
+        await _sync_scraper_health(results, session)
     logger.info("pipeline_complete", extra={"theatres": len(results)})
 
 
-async def _auto_disable_failing_scrapers(
+async def _sync_scraper_health(
     results: list[ScraperResult], session
 ) -> None:
     theatre_repo = TheatreRepository(session)
@@ -54,19 +49,25 @@ async def _auto_disable_failing_scrapers(
 
     for result in results:
         theatre = await theatre_repo.get_by_slug(result.theatre_slug)
-        if not theatre or not theatre.is_cron_enabled:
+        if not theatre:
+            continue
+
+        if result.success and not theatre.is_cron_enabled:
+            await theatre_repo.enable(result.theatre_slug)
+            await session.commit()
+            logger.info("scraper_auto_enabled", extra={"slug": result.theatre_slug})
+            continue
+
+        if not theatre.is_cron_enabled:
             continue
 
         recent = await run_repo.get_last_n_by_theatre(
             theatre.id, _CONSECUTIVE_FAILURE_THRESHOLD
         )
-        if len(recent) < _CONSECUTIVE_FAILURE_THRESHOLD:
-            continue
-
-        def _is_failed(run) -> bool:
-            return run.status == ScraperRunStatus.failure
-
-        if all(_is_failed(r) for r in recent):
+        if (
+            len(recent) >= _CONSECUTIVE_FAILURE_THRESHOLD
+            and all(r.status == ScraperRunStatus.failure for r in recent)
+        ):
             await theatre_repo.disable(result.theatre_slug)
             await session.commit()
             logger.warning(

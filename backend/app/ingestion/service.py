@@ -14,8 +14,6 @@ from app.repositories.screening_attribute import ScreeningAttributeRepository
 from app.repositories.theatre import TheatreRepository
 from app.scrapers.base import ScraperResult
 
-CONSECUTIVE_FAILURE_DISABLE_THRESHOLD = 3
-
 logger = logging.getLogger(__name__)
 
 
@@ -50,18 +48,6 @@ class IngestionService:
                 screenings_scraped=0,
                 error_message=result.error,
             )
-            recent = await self.scraper_run_repo.get_last_n_by_theatre(
-                theatre.id, CONSECUTIVE_FAILURE_DISABLE_THRESHOLD
-            )
-            if (
-                len(recent) >= CONSECUTIVE_FAILURE_DISABLE_THRESHOLD
-                and all(r.status == ScraperRunStatus.failure for r in recent)
-            ):
-                await self.theatre_repo.disable(theatre.slug)
-                logger.warning(
-                    "ingest_theatre_auto_disabled",
-                    extra={"slug": theatre.slug, "consecutive_failures": len(recent)},
-                )
             await self.session.commit()
             return
 
