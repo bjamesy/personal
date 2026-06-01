@@ -13,6 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.config import settings
 from app.models.calendar_subscription import CalendarSubscription
 from app.repositories.calendar_subscription import CalendarSubscriptionRepository
+from app.repositories.scraper_run import ScraperRunRepository
 from app.repositories.screening import ScreeningRepository
 
 _TORONTO_TZ = ZoneInfo("America/Toronto")
@@ -33,6 +34,7 @@ class CalendarSubscriptionService:
     def __init__(self, session: AsyncSession) -> None:
         self.subscription_repo = CalendarSubscriptionRepository(session)
         self.screening_repo = ScreeningRepository(session)
+        self.scraper_run_repo = ScraperRunRepository(session)
 
     async def create(
         self,
@@ -47,15 +49,26 @@ class CalendarSubscriptionService:
             raise HTTPException(status_code=422, detail="One or more theatre IDs are invalid")
         return subscription
 
-    async def build_ics(self, token: str) -> bytes | None:
+    async def build_ics(
+        self, token: str, if_none_match: str | None = None
+    ) -> tuple[str | None, bytes | None]:
+        """Returns (etag, ics). etag is None on 404. ics is None on 304 Not Modified."""
         subscription = await self.subscription_repo.get_by_token(token)
         if not subscription:
-            return None
+            return None, None
+
+        theatre_ids = [st.theatre_id for st in subscription.subscription_theatres]
+
+        latest_run = await self.scraper_run_repo.get_latest_successful_ended_at_for_theatres(theatre_ids)
+        ts = latest_run or subscription.created_at
+        etag = f'"{ts.isoformat()}"'
 
         await self.subscription_repo.record_fetch(subscription)
         await self.subscription_repo.session.commit()
 
-        theatre_ids = [st.theatre_id for st in subscription.subscription_theatres]
+        if if_none_match and if_none_match == etag:
+            return etag, None
+
         screenings = await self.screening_repo.get_upcoming_for_theatres(theatre_ids)
 
         cal = Calendar()
@@ -89,4 +102,4 @@ class CalendarSubscriptionService:
             cal.add_component(event)
 
         cal.add_missing_timezones()
-        return cal.to_ical()
+        return etag, cal.to_ical()

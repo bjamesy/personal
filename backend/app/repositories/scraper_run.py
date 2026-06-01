@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -47,6 +47,16 @@ class ScraperRunRepository:
             .limit(n)
         )
         return list(result.scalars().all())
+
+    async def get_latest_successful_ended_at_for_theatres(
+        self, theatre_ids: list[uuid.UUID]
+    ) -> datetime | None:
+        result = await self.session.execute(
+            select(func.max(ScraperRun.ended_at))
+            .where(ScraperRun.theatre_id.in_(theatre_ids))
+            .where(ScraperRun.status == ScraperRunStatus.success)
+        )
+        return result.scalar_one_or_none()
 
     async def get_latest_per_theatre(self) -> list[ScraperRun]:
         # DISTINCT ON (theatre_id) with ORDER BY started_at DESC gives latest run per theatre
