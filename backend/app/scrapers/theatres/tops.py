@@ -33,6 +33,8 @@ _MONTH_RE = re.compile(
 
 
 class TOPSScraper(JSRenderedScraper):
+    wait_for_selector = "div.sqs-html-content"
+
     def parse(self, html: str) -> list[RawScreening]:
         soup = BeautifulSoup(html, "html.parser")
         screenings: list[RawScreening] = []
