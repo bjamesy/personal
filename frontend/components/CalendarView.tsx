@@ -292,7 +292,7 @@ export function CalendarView({ theatres, screenings, month }: Props) {
       <header className="bg-white/60 dark:bg-zinc-900/60 backdrop-blur-sm border-b border-zinc-200/60 dark:border-zinc-800/60 px-4 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
           <h1 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100 tracking-tight">
-            Toronto Theatre Screenings
+            Toronto Film Tracker
           </h1>
           <div className="flex items-center gap-1">
             <Link

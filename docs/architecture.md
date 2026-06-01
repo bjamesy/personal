@@ -1,4 +1,4 @@
-# Architecture: Toronto Theatre Screening Aggregator
+# Architecture: Toronto Film Tracker
 
 ## 1. System Overview
 

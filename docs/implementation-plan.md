@@ -1,4 +1,4 @@
-# Implementation Plan: Toronto Theatre Screening Aggregator
+# Implementation Plan: Toronto Film Tracker
 
 This document defines the build order for the system to minimize rework and ensure early validation of core assumptions.
 

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Toronto Theatre Screenings",
+  title: "Toronto Film Tracker",
   description: "Movie screenings at independent Toronto theatres",
 };
 

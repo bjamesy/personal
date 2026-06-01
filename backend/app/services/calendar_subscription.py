@@ -59,10 +59,10 @@ class CalendarSubscriptionService:
         screenings = await self.screening_repo.get_upcoming_for_theatres(theatre_ids)
 
         cal = Calendar()
-        cal.add("prodid", "-//Toronto Theatre Screenings//EN")
+        cal.add("prodid", "-//Toronto Film Tracker//EN")
         cal.add("version", "2.0")
         cal.add("calscale", "GREGORIAN")
-        cal.add("x-wr-calname", subscription.label or "Toronto Theatre Screenings")
+        cal.add("x-wr-calname", subscription.label or "Toronto Film Tracker")
         cal.add("x-wr-caldesc", "Upcoming film screenings")
         cal.add("x-wr-timezone", "America/Toronto")
 
