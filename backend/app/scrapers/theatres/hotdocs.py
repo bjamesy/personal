@@ -18,6 +18,8 @@ CONFIG = TheatreConfig(
         "https://boxoffice.hotdocs.ca/websales/pages/list.aspx"
         "?cp242=KenticoInclude&epguid=a2104450-7e47-4369-a17d-c247570c3939&"
     ),
+    latitude=43.6655,
+    longitude=-79.4086,
 )
 
 

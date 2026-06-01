@@ -17,6 +17,8 @@ CONFIG = TheatreConfig(
     slug="revue",
     name="Revue Cinema",
     source_url="https://revuecinema.ca/calendar/",
+    latitude=43.6479,
+    longitude=-79.4503,
 )
 
 _YEAR_RE = re.compile(r"\(\d{4}\)")

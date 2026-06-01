@@ -25,6 +25,8 @@ CONFIG = TheatreConfig(
     slug="varsity",
     name="Cineplex Cinemas Varsity and VIP",
     source_url=f"https://www.cineplex.com/theatre/cineplex-cinemas-varsity-and-vip",
+    latitude=43.6706,
+    longitude=-79.3921,
 )
 
 

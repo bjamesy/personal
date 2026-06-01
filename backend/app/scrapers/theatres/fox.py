@@ -15,6 +15,8 @@ CONFIG = TheatreConfig(
     slug="fox",
     name="Fox Theatre",
     source_url="https://www.foxtheatre.ca/whats-on/now-showing/",
+    latitude=43.6389,
+    longitude=-79.4404,
 )
 
 

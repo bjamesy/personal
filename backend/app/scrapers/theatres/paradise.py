@@ -16,6 +16,8 @@ CONFIG = TheatreConfig(
     slug="paradise",
     name="Paradise Theatre",
     source_url="https://paradiseonbloor.com/coming-soon/",
+    latitude=43.6607,
+    longitude=-79.4263,
 )
 
 

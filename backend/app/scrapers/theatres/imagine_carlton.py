@@ -21,6 +21,8 @@ CONFIG = TheatreConfig(
     slug="imagine_carlton",
     name="Imagine Cinemas Carlton",
     source_url=_BASE_URL,
+    latitude=43.6619,
+    longitude=-79.3793,
 )
 
 

@@ -14,6 +14,8 @@ class TheatreConfig:
     slug: str
     name: str
     source_url: str
+    latitude: float | None = None
+    longitude: float | None = None
 
 
 @dataclass

@@ -13,6 +13,8 @@ CONFIG = TheatreConfig(
     slug="kingsway",
     name="Kingsway Movies",
     source_url="http://kingswaymovies.ca/index.html",
+    latitude=43.6494,
+    longitude=-79.5101,
 )
 
 # Lookahead window: generate screenings for today + next N days

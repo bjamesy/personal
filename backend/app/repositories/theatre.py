@@ -35,8 +35,15 @@ class TheatreRepository:
             theatre.is_cron_enabled = False
             await self.session.flush()
 
-    async def create(self, name: str, slug: str, source_url: str) -> Theatre:
-        theatre = Theatre(name=name, slug=slug, source_url=source_url)
+    async def create(
+        self,
+        name: str,
+        slug: str,
+        source_url: str,
+        latitude: float | None = None,
+        longitude: float | None = None,
+    ) -> Theatre:
+        theatre = Theatre(name=name, slug=slug, source_url=source_url, latitude=latitude, longitude=longitude)
         self.session.add(theatre)
         await self.session.flush()
         return theatre

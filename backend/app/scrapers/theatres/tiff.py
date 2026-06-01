@@ -16,6 +16,8 @@ CONFIG = TheatreConfig(
     slug="tiff",
     name="TIFF Bell Lightbox",
     source_url="https://www.tiff.net/calendar",
+    latitude=43.6469,
+    longitude=-79.3904,
 )
 
 _SKIP_TITLES = (

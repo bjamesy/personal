@@ -5,12 +5,16 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.routes import calendar, outbound_clicks, restaurant_interest_events, restaurant_recommendation_clicks, restaurants, scraper_runs, screenings, theatres
+from app.database import async_session_factory
+from app.ingestion.seed import seed_theatres
 from app.logging_config import setup_logging
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     setup_logging()
+    async with async_session_factory() as session:
+        await seed_theatres(session)
     yield
 
 
