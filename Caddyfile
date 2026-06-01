@@ -1,0 +1,12 @@
+# Without a domain: serves the frontend over plain HTTP on port 80.
+# Once you have a domain, replace ":80" with your domain name and Caddy
+# will obtain and renew a Let's Encrypt certificate automatically.
+#
+# Example with domain:
+#   yourdomain.com {
+#       reverse_proxy frontend:3000
+#   }
+
+:80 {
+    reverse_proxy frontend:3000
+}

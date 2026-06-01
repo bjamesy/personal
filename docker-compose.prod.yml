@@ -5,8 +5,6 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-    ports:
-      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -14,57 +12,57 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
 
   backend:
     build: ./backend
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
     ports:
       - "8000:8000"
     environment:
       DATABASE_URL: ${DATABASE_URL}
-      ENVIRONMENT: ${ENVIRONMENT:-development}
+      ENVIRONMENT: production
       GOOGLE_PLACES_API_KEY: ${GOOGLE_PLACES_API_KEY}
     depends_on:
       db:
         condition: service_healthy
-    volumes:
-      - ./backend:/app
-      # Preserve the container's installed packages — don't let the host .venv shadow them
-      - /app/.venv
+    restart: unless-stopped
 
-  pgadmin:
-    image: dpage/pgadmin4
-    environment:
-      PGADMIN_DEFAULT_EMAIL: admin@example.com
-      PGADMIN_DEFAULT_PASSWORD: admin
-    ports:
-      - "5050:80"
-      
   scheduler:
     build: ./backend
     command: python -m app.scheduler
     environment:
       DATABASE_URL: ${DATABASE_URL}
-      ENVIRONMENT: ${ENVIRONMENT:-development}
-      SCRAPE_INTERVAL_HOURS: ${SCRAPE_INTERVAL_HOURS:-6}
+      ENVIRONMENT: production
+      SCRAPE_INTERVAL_HOURS: ${SCRAPE_INTERVAL_HOURS:-12}
     depends_on:
       db:
         condition: service_healthy
-    volumes:
-      - ./backend:/app
-      - /app/.venv
     restart: unless-stopped
 
   frontend:
     build: ./frontend
-    ports:
-      - "3000:3000"
     environment:
-      # Server-side fetches use the Docker-internal hostname
       API_URL: http://backend:8000
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
     depends_on:
       - backend
+    restart: unless-stopped
+
+  caddy:
+    image: caddy:2-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - frontend
+      - backend
+    restart: unless-stopped
 
 volumes:
   postgres_data:
+  caddy_data:
+  caddy_config:
