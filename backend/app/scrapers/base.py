@@ -3,6 +3,8 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
 
+LOOKAHEAD_DAYS = 14
+
 
 class ScraperStrategy(enum.Enum):
     static = "static"

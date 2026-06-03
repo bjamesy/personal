@@ -1,7 +1,7 @@
 import asyncio
 import hashlib
 import logging
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -12,7 +12,7 @@ from app.repositories.scraper_run import ScraperRunRepository
 from app.repositories.screening import ScreeningRepository
 from app.repositories.screening_attribute import ScreeningAttributeRepository
 from app.repositories.theatre import TheatreRepository
-from app.scrapers.base import ScraperResult
+from app.scrapers.base import LOOKAHEAD_DAYS, ScraperResult
 
 logger = logging.getLogger(__name__)
 
@@ -118,9 +118,12 @@ class IngestionService:
                         extra={"theatre": theatre.slug, "title": normalized},
                     )
 
-        # Remove future screenings no longer advertised by this theatre.
+        # Remove screenings within the scrape window that are no longer advertised.
+        # We bound the delete to the same horizon we scraped so that screenings beyond
+        # the window (scraped in a previous run with a wider horizon) are not touched.
         now = datetime.now(timezone.utc)
-        stale = await self.screening_repo.delete_stale_future(theatre.id, current_keys, now)
+        scrape_cutoff = now + timedelta(days=LOOKAHEAD_DAYS - 1)
+        stale = await self.screening_repo.delete_stale_future(theatre.id, current_keys, now, scrape_cutoff)
         if stale:
             logger.info("ingest_stale_removed", extra={"theatre": theatre.slug, "count": stale})
 

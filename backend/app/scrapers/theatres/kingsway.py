@@ -4,7 +4,7 @@ from zoneinfo import ZoneInfo
 
 from bs4 import BeautifulSoup
 
-from app.scrapers.base import RawScreening, TheatreConfig, detect_format_attributes
+from app.scrapers.base import LOOKAHEAD_DAYS, RawScreening, TheatreConfig, detect_format_attributes
 from app.scrapers.static import StaticScraper
 
 TORONTO_TZ = ZoneInfo("America/Toronto")
@@ -16,9 +16,6 @@ CONFIG = TheatreConfig(
     latitude=43.6494,
     longitude=-79.5101,
 )
-
-# Lookahead window: generate screenings for today + next N days
-_LOOKAHEAD_DAYS = 14
 
 _DAY_NUM = {
     "mon": 0, "monday": 0,
@@ -124,7 +121,7 @@ def _upcoming_dates(days: set[int]) -> list[date]:
     today = datetime.now(TORONTO_TZ).date()
     return [
         today + timedelta(days=i)
-        for i in range(_LOOKAHEAD_DAYS)
+        for i in range(LOOKAHEAD_DAYS)
         if (today + timedelta(days=i)).weekday() in days
     ]
 

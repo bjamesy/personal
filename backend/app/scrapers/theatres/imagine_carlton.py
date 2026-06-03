@@ -7,13 +7,11 @@ from zoneinfo import ZoneInfo
 
 from playwright.async_api import async_playwright
 
-from app.scrapers.base import BaseScraper, RawScreening, ScraperStrategy, TheatreConfig, detect_format_attributes
+from app.scrapers.base import LOOKAHEAD_DAYS, BaseScraper, RawScreening, ScraperStrategy, TheatreConfig, detect_format_attributes
 
 logger = logging.getLogger(__name__)
 
 TORONTO_TZ = ZoneInfo("America/Toronto")
-
-_LOOKAHEAD_DAYS = 14
 _BASE_URL = "https://omniwebticketing6.com/imaginecinemas/carlton/"
 _GMOVIEDATA_RE = re.compile(r"var gMovieData = (\{)")
 
@@ -31,7 +29,7 @@ class ImagineCarItonScraper(BaseScraper):
 
     async def scrape(self) -> list[RawScreening]:
         today = datetime.now(TORONTO_TZ).date()
-        dates = [today + timedelta(days=i) for i in range(_LOOKAHEAD_DAYS)]
+        dates = [today + timedelta(days=i) for i in range(LOOKAHEAD_DAYS)]
         screenings: list[RawScreening] = []
 
         async with async_playwright() as playwright:

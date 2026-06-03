@@ -4,13 +4,11 @@ from zoneinfo import ZoneInfo
 
 import httpx
 
-from app.scrapers.base import BaseScraper, RawScreening, ScraperStrategy, TheatreConfig, detect_format_attributes
+from app.scrapers.base import LOOKAHEAD_DAYS, BaseScraper, RawScreening, ScraperStrategy, TheatreConfig, detect_format_attributes
 
 logger = logging.getLogger(__name__)
 
 TORONTO_TZ = ZoneInfo("America/Toronto")
-
-_LOOKAHEAD_DAYS = 7
 _LOCATION_ID = 7199
 _API_URL = "https://apis.cineplex.com/prod/cpx/theatrical/api/v1/showtimes"
 
@@ -40,7 +38,7 @@ class VarsityScraper(BaseScraper):
 
         error_count = 0
         async with httpx.AsyncClient(headers=_HEADERS, timeout=15.0) as client:
-            for i in range(_LOOKAHEAD_DAYS):
+            for i in range(LOOKAHEAD_DAYS):
                 d = today + timedelta(days=i)
                 date_str = f"{d.month}/{d.day}/{d.year}"
                 try:
@@ -55,8 +53,8 @@ class VarsityScraper(BaseScraper):
                     error_count += 1
                     logger.exception("varsity_fetch_error", extra={"date": d.isoformat()})
 
-        if error_count == _LOOKAHEAD_DAYS:
-            raise RuntimeError(f"All {_LOOKAHEAD_DAYS} day fetches failed")
+        if error_count == LOOKAHEAD_DAYS:
+            raise RuntimeError(f"All {LOOKAHEAD_DAYS} day fetches failed")
 
         return screenings
 

@@ -96,14 +96,21 @@ class ScreeningRepository:
         theatre_id: uuid.UUID,
         current_keys: set[str],
         from_time: datetime,
+        to_time: datetime | None = None,
     ) -> int:
-        """Delete future screenings for a theatre that are no longer in the current scrape."""
+        """Delete screenings for a theatre within [from_time, to_time] not in the current scrape.
+
+        Passing to_time ensures we don't touch screenings beyond the scrape window — only
+        screenings the scraper actually looked at are considered candidates for deletion.
+        """
         stmt = (
             delete(Screening)
             .where(Screening.theatre_id == theatre_id)
             .where(Screening.start_time >= from_time)
             .where(Screening.idempotency_key.notin_(current_keys))
         )
+        if to_time is not None:
+            stmt = stmt.where(Screening.start_time <= to_time)
         result = await self.session.execute(stmt)
         return result.rowcount
 
