@@ -12,4 +12,4 @@ class TheatreResponse(BaseModel):
     slug: str
     source_url: str
     is_cron_enabled: bool
-    last_scraped_at: datetime | None
+    last_scraped_at: datetime | None = None
