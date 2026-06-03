@@ -24,7 +24,7 @@ class OutboundClick(Base):
     __tablename__ = "outbound_clicks"
 
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
-    screening_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("screenings.id"))
+    screening_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("screenings.id", ondelete="SET NULL"))
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
@@ -33,4 +33,4 @@ class OutboundClick(Base):
     )
     prompted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
-    screening: Mapped[Screening] = relationship()
+    screening: Mapped[Screening | None] = relationship()
