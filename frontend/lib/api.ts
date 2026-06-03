@@ -14,6 +14,7 @@ export interface TheatreData {
   slug: string;
   source_url: string;
   is_cron_enabled: boolean;
+  last_scraped_at: string | null;
 }
 
 export interface MovieData {

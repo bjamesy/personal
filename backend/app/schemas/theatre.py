@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict
 
@@ -11,3 +12,4 @@ class TheatreResponse(BaseModel):
     slug: str
     source_url: str
     is_cron_enabled: bool
+    last_scraped_at: datetime | None

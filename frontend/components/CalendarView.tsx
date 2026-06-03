@@ -16,6 +16,7 @@ import {
   displayTitle,
   formatAgendaDate,
   formatMonthLabel,
+  formatRelativeTime,
   formatTime,
   nextMonth,
   prevMonth,
@@ -332,6 +333,7 @@ export function CalendarView({ theatres, screenings, month }: Props) {
               <FilterButton
                 key={t.slug}
                 label={t.name}
+                subtitle={formatRelativeTime(t.last_scraped_at) ?? undefined}
                 active={selectedSlugs.has(t.slug)}
                 disabled={!t.is_cron_enabled}
                 onClick={() => toggleSlug(t.slug)}
@@ -910,11 +912,18 @@ function TheatreDropdown({ theatres, selectedSlugs, onToggle, onSelectAll }: The
                   disabled={!t.is_cron_enabled}
                   className="w-4 h-4 accent-zinc-900 dark:accent-zinc-400 shrink-0"
                 />
-                <span className="flex items-center gap-1.5 text-sm text-zinc-700 dark:text-zinc-300">
+                <span className="flex items-center gap-1.5 text-sm text-zinc-700 dark:text-zinc-300 min-w-0">
                   {!t.is_cron_enabled && (
                     <span className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />
                   )}
-                  {t.name}
+                  <span>
+                    {t.name}
+                    {formatRelativeTime(t.last_scraped_at) && (
+                      <span className="block text-[10px] text-zinc-400 dark:text-zinc-500 font-normal leading-tight mt-0.5">
+                        Updated {formatRelativeTime(t.last_scraped_at)}
+                      </span>
+                    )}
+                  </span>
                 </span>
               </label>
             ))}
@@ -938,11 +947,13 @@ function TheatreDropdown({ theatres, selectedSlugs, onToggle, onSelectAll }: The
 
 function FilterButton({
   label,
+  subtitle,
   active,
   disabled = false,
   onClick,
 }: {
   label: string;
+  subtitle?: string;
   active: boolean;
   disabled?: boolean;
   onClick: () => void;
@@ -968,6 +979,11 @@ function FilterButton({
       }`}
     >
       {label}
+      {subtitle && (
+        <span className={`block text-[9px] font-normal leading-none mt-0.5 ${active ? "opacity-60" : "text-zinc-500 dark:text-zinc-400"}`}>
+          {subtitle}
+        </span>
+      )}
     </button>
   );
 }

@@ -1,8 +1,10 @@
 import uuid
+from datetime import datetime
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.models.scraper_run import ScraperRun, ScraperRunStatus
 from app.models.theatre import Theatre
 
 
@@ -13,6 +15,20 @@ class TheatreRepository:
     async def get_all(self) -> list[Theatre]:
         result = await self.session.execute(select(Theatre).order_by(Theatre.name))
         return list(result.scalars().all())
+
+    async def get_all_with_last_scraped(self) -> list[tuple[Theatre, datetime | None]]:
+        last_scraped_subq = (
+            select(func.max(ScraperRun.ended_at))
+            .where(ScraperRun.theatre_id == Theatre.id)
+            .where(ScraperRun.status == ScraperRunStatus.success)
+            .correlate(Theatre)
+            .scalar_subquery()
+        )
+        result = await self.session.execute(
+            select(Theatre, last_scraped_subq.label("last_scraped_at"))
+            .order_by(Theatre.name)
+        )
+        return list(result.all())
 
     async def get_by_id(self, theatre_id: uuid.UUID) -> Theatre | None:
         result = await self.session.execute(
