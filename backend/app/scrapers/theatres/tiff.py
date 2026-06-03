@@ -57,7 +57,8 @@ class TIFFScraper(BaseScraper):
                 )
                 await context.add_init_script(_STEALTH_SCRIPT)
                 page = await context.new_page()
-                await page.goto(self.config.source_url, wait_until="networkidle")
+                await page.goto(self.config.source_url, wait_until="domcontentloaded")
+                await page.wait_for_selector('[id^="calendar-item-"]', timeout=30000)
                 html = await page.content()
             finally:
                 await browser.close()
