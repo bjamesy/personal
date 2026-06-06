@@ -50,7 +50,7 @@ class TIFFScraper(BaseScraper):
                     user_agent=(
                         "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
                         "AppleWebKit/537.36 (KHTML, like Gecko) "
-                        "Chrome/124.0.0.0 Safari/537.36"
+                        "Chrome/136.0.0.0 Safari/537.36"
                     ),
                     viewport={"width": 1280, "height": 800},
                     locale="en-CA",
@@ -58,7 +58,14 @@ class TIFFScraper(BaseScraper):
                 await context.add_init_script(_STEALTH_SCRIPT)
                 page = await context.new_page()
                 await page.goto(self.config.source_url, wait_until="domcontentloaded")
-                await page.wait_for_selector('[id^="calendar-item-"]', timeout=30000)
+                # Wait for JS-rendered schedule content, not just the SSR day containers.
+                # screeningButtonLink = ticketed future screening
+                # passedButton = past screening rendered as non-clickable button
+                # freeDropInScreening = free admission slot
+                await page.wait_for_selector(
+                    'a[class*="screeningButtonLink"], button[class*="passedButton"], div[class*="freeDropInScreening"]',
+                    timeout=30000,
+                )
                 html = await page.content()
             finally:
                 await browser.close()

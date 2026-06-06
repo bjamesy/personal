@@ -121,11 +121,20 @@ class IngestionService:
         # Remove screenings within the scrape window that are no longer advertised.
         # We bound the delete to the same horizon we scraped so that screenings beyond
         # the window (scraped in a previous run with a wider horizon) are not touched.
+        # Guard: skip deletion when 0 screenings were found — an empty result more
+        # likely signals a broken scraper than a genuinely empty calendar, and
+        # deleting on 0 would wipe all upcoming data for the theatre.
         now = datetime.now(timezone.utc)
         scrape_cutoff = now + timedelta(days=LOOKAHEAD_DAYS - 1)
-        stale = await self.screening_repo.delete_stale_future(theatre.id, current_keys, now, scrape_cutoff)
-        if stale:
-            logger.info("ingest_stale_removed", extra={"theatre": theatre.slug, "count": stale})
+        if not current_keys:
+            logger.warning(
+                "ingest_stale_skipped_empty_scrape",
+                extra={"theatre": theatre.slug},
+            )
+        else:
+            stale = await self.screening_repo.delete_stale_future(theatre.id, current_keys, now, scrape_cutoff)
+            if stale:
+                logger.info("ingest_stale_removed", extra={"theatre": theatre.slug, "count": stale})
 
         await self.scraper_run_repo.complete(
             scraper_run_id=scraper_run.id,
