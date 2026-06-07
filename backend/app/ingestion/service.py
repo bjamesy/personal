@@ -121,16 +121,26 @@ class IngestionService:
         # Remove screenings within the scrape window that are no longer advertised.
         # We bound the delete to the same horizon we scraped so that screenings beyond
         # the window (scraped in a previous run with a wider horizon) are not touched.
-        # Guard: skip deletion when 0 screenings were found — an empty result more
-        # likely signals a broken scraper than a genuinely empty calendar, and
-        # deleting on 0 would wipe all upcoming data for the theatre.
+        # Guard: skip deletion when current_keys is empty — passing an empty exclusion
+        # set to delete_stale_future would wipe all upcoming screenings for the theatre.
+        # We distinguish two empty cases so each shows up distinctly in logs:
+        #   - scraper returned 0 raw screenings → likely empty calendar, safe to skip
+        #   - scraper returned N but all were filtered (naive datetimes / empty titles)
+        #     → indicates a scraper regression; still skip deletion to avoid data loss
         now = datetime.now(timezone.utc)
         scrape_cutoff = now + timedelta(days=LOOKAHEAD_DAYS - 1)
+        stale = 0
         if not current_keys:
-            logger.warning(
-                "ingest_stale_skipped_empty_scrape",
-                extra={"theatre": theatre.slug},
-            )
+            if not result.screenings:
+                logger.warning(
+                    "ingest_stale_skipped_empty_scrape",
+                    extra={"theatre": theatre.slug},
+                )
+            else:
+                logger.warning(
+                    "ingest_stale_skipped_all_filtered",
+                    extra={"theatre": theatre.slug, "raw_count": len(result.screenings)},
+                )
         else:
             stale = await self.screening_repo.delete_stale_future(theatre.id, current_keys, now, scrape_cutoff)
             if stale:
@@ -153,4 +163,8 @@ class IngestionService:
 async def ingest_all(results: list[ScraperResult], session: AsyncSession) -> None:
     service = IngestionService(session)
     for result in results:
-        await service.ingest(result)
+        try:
+            await service.ingest(result)
+        except Exception:
+            logger.exception("ingest_unhandled_error", extra={"theatre": result.theatre_slug})
+            await session.rollback()
