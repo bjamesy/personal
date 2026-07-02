@@ -1,3 +1,7 @@
+{
+    acme_ca https://acme-v02.api.letsencrypt.org/directory
+}
+
 whats-screening-to.ca {
     reverse_proxy frontend:3000
     log {
@@ -21,3 +25,5 @@ stats.whats-screening-to.ca {
     root * /srv/goaccess
     file_server
 }
+
+import /etc/caddy/line-reader.caddy

@@ -56,6 +56,7 @@ services:
       - "443:443"
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile
+      - ./line-reader.caddy:/etc/caddy/line-reader.caddy
       - caddy_data:/data
       - caddy_config:/config
       - caddy_logs:/var/log/caddy

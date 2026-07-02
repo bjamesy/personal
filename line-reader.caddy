@@ -1,0 +1,7 @@
+off-book.ca {
+    reverse_proxy 172.18.0.1:3001
+}
+
+api.off-book.ca {
+    reverse_proxy 172.18.0.1:8001
+}
