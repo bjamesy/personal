@@ -58,12 +58,36 @@ services:
       - ./Caddyfile:/etc/caddy/Caddyfile
       - caddy_data:/data
       - caddy_config:/config
+      - caddy_logs:/var/log/caddy
+      - goaccess_report:/srv/goaccess:ro
     depends_on:
       - frontend
       - backend
+    restart: unless-stopped
+
+  goaccess:
+    image: allinurl/goaccess
+    volumes:
+      - caddy_logs:/var/log/caddy:ro
+      - goaccess_report:/report
+    entrypoint: ["sh", "-c"]
+    command:
+      - |
+        apk add --no-cache jq
+        while true; do
+          if [ -f /var/log/caddy/access.log ]; then
+            jq -r 'select(.request) | "\(.request.client_ip) - - [\(.ts|floor|gmtime|strftime("%d/%b/%Y:%H:%M:%S +0000"))] \"\(.request.method) \(.request.uri) \(.request.proto)\" \(.status) \(.size) \"\(.request.headers.Referer[0] // "-")\" \"\(.request.headers["User-Agent"][0] // "-")\""' /var/log/caddy/access.log > /tmp/clf.log
+            goaccess /tmp/clf.log --log-format=COMBINED -o /report/index.html --ignore-crawlers -a
+          fi
+          sleep 300
+        done
+    depends_on:
+      - caddy
     restart: unless-stopped
 
 volumes:
   postgres_data:
   caddy_data:
   caddy_config:
+  caddy_logs:
+  goaccess_report:

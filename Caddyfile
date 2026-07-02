@@ -1,7 +1,23 @@
 whats-screening-to.ca {
     reverse_proxy frontend:3000
+    log {
+        output file /var/log/caddy/access.log
+        format json
+    }
 }
 
 api.whats-screening-to.ca {
     reverse_proxy backend:8000
+    log {
+        output file /var/log/caddy/access.log
+        format json
+    }
+}
+
+stats.whats-screening-to.ca {
+    basic_auth {
+        admin $2a$14$NZLaOdaZFIjxc67OI1PTI.ktEUGY6.Jod4lH5uNOhEoD/ipOOvbbO
+    }
+    root * /srv/goaccess
+    file_server
 }
