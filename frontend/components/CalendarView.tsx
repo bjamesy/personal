@@ -277,6 +277,20 @@ export function CalendarView({ theatres, screenings, month }: Props) {
     .filter((k) => k.startsWith(monthPrefix))
     .sort();
 
+  // On mobile, the agenda lists every day of the month in order, so on a
+  // late-month visit today's screenings can be scrolled far below a wall of
+  // already-passed days. Jump straight to today and expand it, once.
+  const todayInAgenda = agendaDates.includes(today);
+  const hasAutoScrolledRef = useRef(false);
+  const agendaSectionRefs = useRef<Record<string, HTMLElement | null>>({});
+
+  useEffect(() => {
+    if (hasAutoScrolledRef.current || !todayInAgenda) return;
+    hasAutoScrolledRef.current = true;
+    setExpandedDay(today);
+    agendaSectionRefs.current[today]?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [todayInAgenda, today]);
+
   return (
     <div className="min-h-screen relative">
       {/* Background image */}
@@ -291,15 +305,15 @@ export function CalendarView({ theatres, screenings, month }: Props) {
         <div className="absolute inset-0 bg-white/55 dark:bg-zinc-950/65" />
       </div>
       {/* Header */}
-      <header className="bg-white/60 dark:bg-zinc-900/60 backdrop-blur-sm border-b border-zinc-200/60 dark:border-zinc-800/60 px-4 py-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
-          <h1 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100 tracking-tight">
+      <header className="bg-white/60 dark:bg-zinc-900/60 backdrop-blur-sm border-b border-zinc-200/60 dark:border-zinc-800/60 px-4 py-3 sm:py-4">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-4">
+          <h1 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100 tracking-tight whitespace-nowrap">
             Toronto Film Tracker
           </h1>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 -ml-2 sm:ml-0">
             <Link
               href={`?month=${prevMonth(month)}`}
-              className="px-2 py-1 text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded text-lg leading-none"
+              className="w-9 h-9 flex items-center justify-center text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded text-lg leading-none"
               aria-label="Previous month"
             >
               ‹
@@ -309,7 +323,7 @@ export function CalendarView({ theatres, screenings, month }: Props) {
             </span>
             <Link
               href={`?month=${nextMonth(month)}`}
-              className="px-2 py-1 text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded text-lg leading-none"
+              className="w-9 h-9 flex items-center justify-center text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded text-lg leading-none"
               aria-label="Next month"
             >
               ›
@@ -545,7 +559,7 @@ export function CalendarView({ theatres, screenings, month }: Props) {
               const isExpanded = expandedDay === key;
               const count = byDate[key].length;
               return (
-                <section key={key}>
+                <section key={key} ref={(el) => { agendaSectionRefs.current[key] = el; }}>
                   <button
                     onClick={() => toggleExpanded(key)}
                     aria-expanded={isExpanded}
@@ -1002,7 +1016,7 @@ function ThemeToggle() {
     <button
       onClick={toggle}
       aria-label="Toggle dark mode"
-      className="ml-1 p-1.5 rounded-lg text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+      className="ml-1 w-9 h-9 flex items-center justify-center rounded-lg text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
     >
       {/* Moon: visible in light mode */}
       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="block dark:hidden">
