@@ -33,6 +33,7 @@ interface Props {
 
 const DAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const VISIBLE_COUNT = 5;
+const OVERFLOW_GROUP_CAP = 5;
 const PENDING_CLICK_KEY = "pending_outbound_click";
 
 interface PendingClick {
@@ -266,6 +267,19 @@ export function CalendarView({ theatres, screenings, month }: Props) {
 
   function toggleExpanded(key: string) {
     setExpandedDay((prev) => (prev === key ? null : key));
+  }
+
+  // Tracks which per-theatre screening lists (within an expanded day) have
+  // been expanded past the OVERFLOW_GROUP_CAP via "+N more".
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+
+  function toggleGroup(key: string) {
+    setExpandedGroups((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
   }
 
   const weeks = buildCalendarWeeks(month);
@@ -508,29 +522,40 @@ export function CalendarView({ theatres, screenings, month }: Props) {
 
                 {/* Screenings */}
                 <div className="space-y-0.5">
-                  {(isExpanded ? groupByTheatre(dayScreenings) : groupByTheatre(visible)).map((group) => (
-                    <div key={group.name} className="border-t border-zinc-50 dark:border-zinc-800 pt-0.5 mt-0.5 first:border-t-0 first:pt-0 first:mt-0">
-                      <div className="text-[9px] font-semibold uppercase tracking-widest text-zinc-600/80 dark:text-zinc-400">
-                        {group.name}
+                  {(isExpanded ? groupByTheatre(dayScreenings) : groupByTheatre(visible)).map((group) => {
+                    const cap = isExpanded ? capGroup(group, key, expandedGroups) : { shown: group.screenings, isExpanded: false, key: "" };
+                    return (
+                      <div key={group.name} className="border-t border-zinc-50 dark:border-zinc-800 pt-0.5 mt-0.5 first:border-t-0 first:pt-0 first:mt-0">
+                        <div className="text-[9px] font-semibold uppercase tracking-widest text-zinc-600/80 dark:text-zinc-400">
+                          {group.name}
+                        </div>
+                        {cap.shown.map((s) => (
+                          <ScreeningLink
+                            key={s.id}
+                            s={s}
+                            activeClassName="text-xs leading-snug truncate flex gap-1 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded"
+                            onClickScreening={handleScreeningClick}
+                            title={`${displayTitle(s.movie.title)} — ${s.theatre.name} — ${formatTime(s.start_time)}`}
+                          >
+                            <span className="text-zinc-600 dark:text-zinc-400 tabular-nums shrink-0">
+                              {formatTime(s.start_time)}
+                            </span>
+                            <span className="text-zinc-800 dark:text-zinc-200 truncate">
+                              {displayTitle(s.movie.title)}
+                            </span>
+                          </ScreeningLink>
+                        ))}
+                        {isExpanded && group.screenings.length > OVERFLOW_GROUP_CAP && (
+                          <button
+                            onClick={() => toggleGroup(cap.key)}
+                            className="text-[9px] text-zinc-500 dark:text-zinc-500 hover:underline"
+                          >
+                            {cap.isExpanded ? "Show less" : `+${group.screenings.length - OVERFLOW_GROUP_CAP} more`}
+                          </button>
+                        )}
                       </div>
-                      {group.screenings.map((s) => (
-                        <ScreeningLink
-                          key={s.id}
-                          s={s}
-                          activeClassName="text-xs leading-snug truncate flex gap-1 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded"
-                          onClickScreening={handleScreeningClick}
-                          title={`${displayTitle(s.movie.title)} — ${s.theatre.name} — ${formatTime(s.start_time)}`}
-                        >
-                          <span className="text-zinc-600 dark:text-zinc-400 tabular-nums shrink-0">
-                            {formatTime(s.start_time)}
-                          </span>
-                          <span className="text-zinc-800 dark:text-zinc-200 truncate">
-                            {displayTitle(s.movie.title)}
-                          </span>
-                        </ScreeningLink>
-                      ))}
-                    </div>
-                  ))}
+                    );
+                  })}
                   {!isExpanded && hidden.length > 0 && (
                     <OverflowBadge groups={groupByTheatre(hidden)} onClickScreening={handleScreeningClick} />
                   )}
@@ -589,30 +614,41 @@ export function CalendarView({ theatres, screenings, month }: Props) {
                   </button>
                   {isExpanded && (
                     <div className="space-y-3 pt-3">
-                      {groupByTheatre(byDate[key]).map((group) => (
-                        <div key={group.name}>
-                          <div className="text-[9px] font-semibold uppercase tracking-widest text-zinc-600/80 dark:text-zinc-400 mb-1">
-                            {group.name}
-                          </div>
-                          <div className="space-y-0.5">
-                            {group.screenings.map((s) => (
-                              <ScreeningLink
-                                key={s.id}
-                                s={s}
-                                activeClassName="flex gap-3 items-baseline py-1.5 px-2 -mx-2 rounded active:bg-zinc-100 dark:active:bg-zinc-800"
-                                onClickScreening={handleScreeningClick}
+                      {groupByTheatre(byDate[key]).map((group) => {
+                        const cap = capGroup(group, key, expandedGroups);
+                        return (
+                          <div key={group.name}>
+                            <div className="text-[9px] font-semibold uppercase tracking-widest text-zinc-600/80 dark:text-zinc-400 mb-1">
+                              {group.name}
+                            </div>
+                            <div className="space-y-0.5">
+                              {cap.shown.map((s) => (
+                                <ScreeningLink
+                                  key={s.id}
+                                  s={s}
+                                  activeClassName="flex gap-3 items-baseline py-1.5 px-2 -mx-2 rounded active:bg-zinc-100 dark:active:bg-zinc-800"
+                                  onClickScreening={handleScreeningClick}
+                                >
+                                  <span className="text-xs tabular-nums text-zinc-600 dark:text-zinc-400 shrink-0 w-16">
+                                    {formatTime(s.start_time)}
+                                  </span>
+                                  <span className="text-sm text-zinc-800 dark:text-zinc-200">
+                                    {displayTitle(s.movie.title)}
+                                  </span>
+                                </ScreeningLink>
+                              ))}
+                            </div>
+                            {group.screenings.length > OVERFLOW_GROUP_CAP && (
+                              <button
+                                onClick={() => toggleGroup(cap.key)}
+                                className="text-xs text-zinc-500 dark:text-zinc-500 hover:underline mt-1"
                               >
-                                <span className="text-xs tabular-nums text-zinc-600 dark:text-zinc-400 shrink-0 w-16">
-                                  {formatTime(s.start_time)}
-                                </span>
-                                <span className="text-sm text-zinc-800 dark:text-zinc-200">
-                                  {displayTitle(s.movie.title)}
-                                </span>
-                              </ScreeningLink>
-                            ))}
+                                {cap.isExpanded ? "Show less" : `+${group.screenings.length - OVERFLOW_GROUP_CAP} more`}
+                              </button>
+                            )}
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
                 </section>
@@ -682,6 +718,17 @@ export function CalendarView({ theatres, screenings, month }: Props) {
 interface TheatreGroup {
   name: string;
   screenings: ScreeningData[];
+}
+
+function groupExpansionKey(dayKey: string, theatreName: string): string {
+  return `${dayKey}::${theatreName}`;
+}
+
+function capGroup(group: TheatreGroup, dayKey: string, expandedGroups: Set<string>) {
+  const key = groupExpansionKey(dayKey, group.name);
+  const isExpanded = expandedGroups.has(key);
+  const shown = isExpanded ? group.screenings : group.screenings.slice(0, OVERFLOW_GROUP_CAP);
+  return { key, isExpanded, shown };
 }
 
 function isPast(startTime: string): boolean {
@@ -800,30 +847,39 @@ function OverflowBadge({ groups, onClickScreening }: OverflowBadgeProps) {
             onMouseLeave={scheduleHide}
             className="z-50 min-w-52 max-w-72 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 py-2 shadow-lg"
           >
-            {groups.map((group) => (
-              <div key={group.name} className="border-t border-zinc-100 dark:border-zinc-800 first:border-t-0">
-                <div className="px-3 pt-1 pb-0.5 text-[10px] uppercase tracking-wider text-zinc-600 dark:text-zinc-400 font-medium">
-                  {group.name}
+            {groups.map((group) => {
+              const shown = group.screenings.slice(0, OVERFLOW_GROUP_CAP);
+              const groupOverflow = group.screenings.length - shown.length;
+              return (
+                <div key={group.name} className="border-t border-zinc-100 dark:border-zinc-800 first:border-t-0">
+                  <div className="px-3 pt-1 pb-0.5 text-[10px] uppercase tracking-wider text-zinc-600 dark:text-zinc-400 font-medium">
+                    {group.name}
+                  </div>
+                  {shown.map((s) => (
+                    <ScreeningLink
+                      key={s.id}
+                      s={s}
+                      role="listitem"
+                      activeClassName="flex items-baseline gap-2 px-3 py-0.5 text-xs hover:bg-zinc-50 dark:hover:bg-zinc-800"
+                      onClickScreening={onClickScreening}
+                      title={`${displayTitle(s.movie.title)} — ${s.theatre.name}`}
+                    >
+                      <span className="shrink-0 tabular-nums text-zinc-600 dark:text-zinc-400">
+                        {formatTime(s.start_time)}
+                      </span>
+                      <span className="truncate text-zinc-700 dark:text-zinc-300">
+                        {displayTitle(s.movie.title)}
+                      </span>
+                    </ScreeningLink>
+                  ))}
+                  {groupOverflow > 0 && (
+                    <div className="px-3 py-0.5 text-[11px] text-zinc-500 dark:text-zinc-500">
+                      +{groupOverflow} more
+                    </div>
+                  )}
                 </div>
-                {group.screenings.map((s) => (
-                  <ScreeningLink
-                    key={s.id}
-                    s={s}
-                    role="listitem"
-                    activeClassName="flex items-baseline gap-2 px-3 py-0.5 text-xs hover:bg-zinc-50 dark:hover:bg-zinc-800"
-                    onClickScreening={onClickScreening}
-                    title={`${displayTitle(s.movie.title)} — ${s.theatre.name}`}
-                  >
-                    <span className="shrink-0 tabular-nums text-zinc-600 dark:text-zinc-400">
-                      {formatTime(s.start_time)}
-                    </span>
-                    <span className="truncate text-zinc-700 dark:text-zinc-300">
-                      {displayTitle(s.movie.title)}
-                    </span>
-                  </ScreeningLink>
-                ))}
-              </div>
-            ))}
+              );
+            })}
           </div>,
           document.body
         )}
