@@ -2,6 +2,7 @@ from app.scrapers.base import BaseScraper
 from app.scrapers.theatres.fox import CONFIG as FOX_CONFIG, FoxScraper
 from app.scrapers.theatres.hotdocs import CONFIG as HOTDOCS_CONFIG, HotDocsScraper
 from app.scrapers.theatres.imagine_carlton import CONFIG as IMAGINE_CARLTON_CONFIG, ImagineCarItonScraper
+from app.scrapers.theatres.imagine_marketsquare import CONFIG as IMAGINE_MARKETSQUARE_CONFIG, ImagineMarketSquareScraper
 from app.scrapers.theatres.kingsway import CONFIG as KINGSWAY_CONFIG, KingswayScraper
 from app.scrapers.theatres.paradise import CONFIG as PARADISE_CONFIG, ParadiseScraper
 from app.scrapers.theatres.revue import CONFIG as REVUE_CONFIG, RevueScraper
@@ -13,6 +14,7 @@ SCRAPERS: dict[str, BaseScraper] = {
     "paradise": ParadiseScraper(PARADISE_CONFIG),
     "hotdocs": HotDocsScraper(HOTDOCS_CONFIG),
     "imagine_carlton": ImagineCarItonScraper(IMAGINE_CARLTON_CONFIG),
+    "imagine_marketsquare": ImagineMarketSquareScraper(IMAGINE_MARKETSQUARE_CONFIG),
     "tops": TOPSScraper(TOPS_CONFIG),
     "fox": FoxScraper(FOX_CONFIG),
     "revue": RevueScraper(REVUE_CONFIG),
