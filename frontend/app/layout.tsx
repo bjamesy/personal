@@ -4,6 +4,9 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Toronto Film Tracker",
   description: "Movie screenings at independent Toronto theatres",
+  verification: {
+    google: "qC_heqP6boXjM3ohumKdwZ5kAWYg2sDiVS37fLh5gik",
+  },
 };
 
 export default function RootLayout({
