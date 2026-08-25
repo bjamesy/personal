@@ -20,7 +20,7 @@ api.whats-screening-to.ca {
 
 stats.whats-screening-to.ca {
     basic_auth {
-        admin $2a$14$NZLaOdaZFIjxc67OI1PTI.ktEUGY6.Jod4lH5uNOhEoD/ipOOvbbO
+        admin $2a$14$y4LKYxhGdeMgZUL5Cjp0OelnJiPn1MeJajTvH2Ht6m6VhtDIsQEPq
     }
     root * /srv/goaccess
     file_server
