@@ -35,6 +35,8 @@ const DAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const VISIBLE_COUNT = 5;
 const OVERFLOW_GROUP_CAP = 5;
 const PENDING_CLICK_KEY = "pending_outbound_click";
+// Feels off prompting real users for restaurant picks post-launch — flip back on to resume.
+const RESTAURANT_SUGGESTIONS_ENABLED = false;
 
 interface PendingClick {
   id: string | null; // null while the API call is in-flight
@@ -162,7 +164,7 @@ export function CalendarView({ theatres, screenings, month }: Props) {
         prompted_at: new Date().toISOString(),
       });
     }
-    if (answer === "yes" && id && theatre) {
+    if (RESTAURANT_SUGGESTIONS_ENABLED && answer === "yes" && id && theatre) {
       setRestaurantModal({ clickId: id, screeningId: theatre.screeningId, theatreId: theatre.theatreId, theatreName: theatre.theatreName });
     }
   }
