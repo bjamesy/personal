@@ -470,7 +470,7 @@ export function CalendarView({ theatres, screenings, month }: Props) {
         </div>
 
         {/* Grid */}
-        <div className="grid grid-cols-7 gap-px bg-zinc-200/60 dark:bg-zinc-700/60 rounded-xl overflow-hidden border border-zinc-200/60 dark:border-zinc-700/60">
+        <div className="grid grid-cols-7 gap-px bg-zinc-200 dark:bg-zinc-700 rounded-xl overflow-hidden border border-zinc-200 dark:border-zinc-700">
           {weeks.flat().map((date, i) => {
             const key = toDateKey(date);
             const dayScreenings = byDate[key] ?? [];
@@ -486,8 +486,8 @@ export function CalendarView({ theatres, screenings, month }: Props) {
                 key={i}
                 className={`min-h-28 p-2 ${
                   inMonth
-                    ? "bg-white/55 dark:bg-zinc-900/55"
-                    : "bg-zinc-50/30 dark:bg-zinc-950/30"
+                    ? "bg-white dark:bg-zinc-900"
+                    : "bg-zinc-50 dark:bg-zinc-950"
                 } ${isExpanded ? "ring-2 ring-inset ring-zinc-900/15 dark:ring-zinc-100/20" : ""}`}
               >
                 {/* Date row — button when day has screenings */}
@@ -581,7 +581,7 @@ export function CalendarView({ theatres, screenings, month }: Props) {
             No screenings found for this month.
           </p>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-3 bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200/70 dark:border-zinc-800/70 shadow-sm p-4">
             {agendaDates.map((key) => {
               const isExpanded = expandedDay === key;
               const count = byDate[key].length;
