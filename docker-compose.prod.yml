@@ -57,10 +57,12 @@ services:
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile
       - ./line-reader.caddy:/etc/caddy/line-reader.caddy
+      - ./jamesballanger.caddy:/etc/caddy/jamesballanger.caddy
       - caddy_data:/data
       - caddy_config:/config
       - caddy_logs:/var/log/caddy
       - goaccess_report:/srv/goaccess:ro
+      - /root/portfolio-site:/srv/jamesballanger:ro
     depends_on:
       - frontend
       - backend
